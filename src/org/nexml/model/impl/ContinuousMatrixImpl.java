@@ -63,7 +63,7 @@ class ContinuousMatrixImpl extends MatrixImpl<Double> implements ContinuousMatri
 		setMatrixElement(matrix);
 		for ( Element rowElement : getChildrenByTagName(matrix, "row") ) {
 			OTU otu = otus.getThingById(rowElement.getAttribute("otu"));
-			MatrixRow<Double> matrixRow = new MatrixRowImpl<Double>(getDocument(),rowElement);
+			MatrixRow<Double> matrixRow = new MatrixRowImpl<Double>(getDocument(),rowElement, this, true);
 			matrixRow.setOTU(otu);
 			mMatrixRows.put(otu, matrixRow);
 		}		

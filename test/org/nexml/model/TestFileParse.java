@@ -5,6 +5,7 @@ package org.nexml.model;
 
 import java.io.File;
 import java.io.IOException;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import junit.framework.Assert;
@@ -38,6 +39,19 @@ public class TestFileParse {
 			e.printStackTrace();
 		}
 		System.out.println(doc.getXmlString());
+	}
+	
+	@Test
+	public void parsePhenoscapeMatrix() throws SAXException, IOException, ParserConfigurationException {
+		final File file = new File("test_files/Buckup_1998.xml");
+		final Document doc = DocumentFactory.parse(file);
+		for (Matrix<?> matrix : doc.getMatrices()) {
+			for (Character character : matrix.getCharacters()) {
+				for (OTU otu : matrix.getOTUs()) {
+					System.out.println(matrix.getRowObject(otu).getCell(character).getValue());
+				}
+			}
+		}
 	}
 
 }

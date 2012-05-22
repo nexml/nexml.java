@@ -65,7 +65,7 @@ class MolecularMatrixImpl extends
 		
 		for ( Element row : getChildrenByTagName( getMatrixElement(), "row") ) {
 			OTU otu = otus.getThingById(row.getAttribute("otu"));
-			MatrixRowImpl<CharacterState> matrixRow = new MatrixRowImpl<CharacterState>(getDocument(),row);
+			MatrixRowImpl<CharacterState> matrixRow = new MatrixRowImpl<CharacterState>(getDocument(),row, this, false);
 			matrixRow.setOTU(otu);
 			mMatrixRows.put(otu, matrixRow);
 		}
