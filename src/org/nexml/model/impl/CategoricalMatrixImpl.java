@@ -14,53 +14,53 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 class CategoricalMatrixImpl extends
-		MatrixImpl<CharacterState> implements CategoricalMatrix {
-	
+MatrixImpl<CharacterState> implements CategoricalMatrix {
+
 	private Set<CharacterStateSet> mCharacterStateSets = new HashSet<CharacterStateSet>();
 	private MolecularCharacterStateSetImpl mMolecularCharacterStates = null;	
-	
-    /**
-     * Protected constructors that take a DOM document object but not
-     * an element object are used for generating new element nodes in
-     * a NeXML document. On calling such constructors, a new element
-     * is created, which can be retrieved using getElement(). After this
-     * step, the Impl class that called this constructor would still 
-     * need to attach the element in the proper location (typically
-     * as a child element of the class that called the constructor). 
-     * @param document a DOM document object
-     * @author rvosa
-     */	
+
+	/**
+	 * Protected constructors that take a DOM document object but not
+	 * an element object are used for generating new element nodes in
+	 * a NeXML document. On calling such constructors, a new element
+	 * is created, which can be retrieved using getElement(). After this
+	 * step, the Impl class that called this constructor would still 
+	 * need to attach the element in the proper location (typically
+	 * as a child element of the class that called the constructor). 
+	 * @param document a DOM document object
+	 * @author rvosa
+	 */	
 	protected CategoricalMatrixImpl(Document document) {
 		super(document,"Standard");
 	}
-	
-    /**
-     * Protected constructors are intended for recursive parsing, i.e.
-     * starting from the root element (which maps onto DocumentImpl) we
-     * traverse the element tree such that for every child element that maps
-     * onto an Impl class the containing class calls that child's protected
-     * constructor, passes in the element of the child. From there the 
-     * child takes over, populates itself and calls the protected 
-     * constructors of its children. These should probably be protected
-     * because there is all sorts of opportunity for outsiders to call
-     * these in the wrong context, passing in the wrong elements etc.
-     * @param document the containing DOM document object. Every Impl 
-     * class needs a reference to this so that it can create DOM element
-     * objects
-     * @param element the equivalent NeXML element (e.g. for OTUsImpl, it's
-     * the <otus/> element)
-     * @author rvosa
-     */
+
+	/**
+	 * Protected constructors are intended for recursive parsing, i.e.
+	 * starting from the root element (which maps onto DocumentImpl) we
+	 * traverse the element tree such that for every child element that maps
+	 * onto an Impl class the containing class calls that child's protected
+	 * constructor, passes in the element of the child. From there the 
+	 * child takes over, populates itself and calls the protected 
+	 * constructors of its children. These should probably be protected
+	 * because there is all sorts of opportunity for outsiders to call
+	 * these in the wrong context, passing in the wrong elements etc.
+	 * @param document the containing DOM document object. Every Impl 
+	 * class needs a reference to this so that it can create DOM element
+	 * objects
+	 * @param element the equivalent NeXML element (e.g. for OTUsImpl, it's
+	 * the <otus/> element)
+	 * @author rvosa
+	 */
 	protected CategoricalMatrixImpl(Document document, Element element, OTUsImpl otus) {
 		super(document, element);
 		for ( Element stateSetElement : getChildrenByTagName( getFormatElement(), CharacterStateSetImpl.getTagNameClass() ) ) {
 			createCharacterStateSet(stateSetElement);
 		}
-		
+
 		for ( Element characterElement : getChildrenByTagName( getFormatElement(), CharacterImpl.getTagNameClass() ) ) {
 			createCharacter(characterElement);
 		}
-		
+
 		for ( Element row : getChildrenByTagName( getMatrixElement(), "row") ) {
 			OTU otu = otus.getThingById(row.getAttribute("otu"));
 			MatrixRowImpl<CharacterState> matrixRow = new MatrixRowImpl<CharacterState>(getDocument(),row, this, false);
@@ -87,7 +87,7 @@ class CategoricalMatrixImpl extends
 		mCharacterStateSets.add(charStateSet); // XXX Make this into a setter?
 		return charStateSet;
 	}
-	
+
 	/**
 	 * This is equivalent to creating a <states> element, i.e.
 	 * a container for state elements, polymorphic_state_set elements
@@ -96,6 +96,7 @@ class CategoricalMatrixImpl extends
 	 * If the format element object doesn't exist yet it's created here
 	 * @author rvosa
 	 */
+	@Override
 	public CharacterStateSet createCharacterStateSet() {
 		CharacterStateSetImpl characterStateSet = new CharacterStateSetImpl(getDocument());
 		List<Element> currentCharElements = getChildrenByTagName(getFormatElement(), "char");
@@ -119,10 +120,11 @@ class CategoricalMatrixImpl extends
 	 * (non-Javadoc)
 	 * @see org.nexml.model.CategoricalMatrix#getCharacterStateSets()
 	 */
+	@Override
 	public Set<CharacterStateSet> getCharacterStateSets() {
 		return Collections.unmodifiableSet(mCharacterStateSets);
 	}
-	
+
 	/**
 	 * This method creates a char element, i.e. a column definition.
 	 * Because NeXML requires for categorical matrices that these
@@ -131,6 +133,7 @@ class CategoricalMatrixImpl extends
 	 * in here, from which the attribute's value is set. 
 	 * @author rvosa
 	 */
+	@Override
 	public Character createCharacter(CharacterStateSet characterStateSet) {
 		CharacterImpl character = new CharacterImpl(getDocument());
 		addThing(character);
@@ -138,7 +141,7 @@ class CategoricalMatrixImpl extends
 		attachFundamentalDataElement(getFormatElement(), character.getElement());
 		return character;
 	}	
-	
+
 	protected Character createCharacter(Element element) {
 		CharacterImpl character = new CharacterImpl(getDocument(),element);
 		addThing(character);
@@ -147,7 +150,7 @@ class CategoricalMatrixImpl extends
 		character.setCharacterStateSet(stateSet);
 		return character;
 	}
-	
+
 	protected CharacterStateSet lookupCharacterStateSetById(String stateSetId) {
 		if ( null == stateSetId ) {
 			return null;
@@ -161,63 +164,62 @@ class CategoricalMatrixImpl extends
 	}
 
 	public CharacterStateSet getDNACharacterStateSet() {
-	    if (mMolecularCharacterStates == null){
-	        mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
-	    }
-	    CharacterStateSet result = mMolecularCharacterStates.getDNAStateSet();
-	    CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
-	    if (mCharacterStateSets.add(characterStateSet)){
-	        if ( null == getFormatElement() ) {
-	            setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
-	            getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
-	        }
-	        getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
-	    }
-	    return result;
+		if (mMolecularCharacterStates == null){
+			mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
+		}
+		CharacterStateSet result = mMolecularCharacterStates.getDNAStateSet();
+		CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
+		if (mCharacterStateSets.add(characterStateSet)){
+			if ( null == getFormatElement() ) {
+				setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
+				getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
+			}
+			getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
+		}
+		return result;
 	}
 
 	public CharacterStateSet getRNACharacterStateSet() {
-        if (mMolecularCharacterStates == null){
-            mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
-        }
-        CharacterStateSet result = mMolecularCharacterStates.getRNAStateSet();
-        CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
-        if (mCharacterStateSets.add(characterStateSet)){
-            if ( null == getFormatElement() ) {
-                setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
-                getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
-            }
-            getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
-        }
-        return result;
-     }
-    
-    public CharacterStateSet getProteinCharacterStateSet(){
-        if (mMolecularCharacterStates == null){
-            mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
-        }
-        CharacterStateSet result = mMolecularCharacterStates.getProteinStateSet();
-        CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
-        if (mCharacterStateSets.add(characterStateSet)){
-            if ( null == getFormatElement() ) {
-                setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
-                getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
-            }
-            getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
-        }
-        return result;
-    }
-
-	public CharacterState parseSymbol(String symbol) {
-		CharacterStateSet lastSet = null;
-		for ( CharacterStateSet stateSet : getCharacterStateSets() ) {
-			CharacterState state = stateSet.lookupCharacterStateBySymbol(symbol);
-			if ( null != state ) {
-				return state;
-			}
-			lastSet = stateSet;
+		if (mMolecularCharacterStates == null){
+			mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
 		}
-		return lastSet.createCharacterState(symbol);
+		CharacterStateSet result = mMolecularCharacterStates.getRNAStateSet();
+		CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
+		if (mCharacterStateSets.add(characterStateSet)){
+			if ( null == getFormatElement() ) {
+				setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
+				getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
+			}
+			getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
+		}
+		return result;
+	}
+
+	public CharacterStateSet getProteinCharacterStateSet(){
+		if (mMolecularCharacterStates == null){
+			mMolecularCharacterStates = new MolecularCharacterStateSetImpl(getDocument());
+		}
+		CharacterStateSet result = mMolecularCharacterStates.getProteinStateSet();
+		CharacterStateSetImpl characterStateSet = (CharacterStateSetImpl)result;
+		if (mCharacterStateSets.add(characterStateSet)){
+			if ( null == getFormatElement() ) {
+				setFormatElement( getDocument().createElementNS(DEFAULT_NAMESPACE,"format") );
+				getElement().insertBefore( getFormatElement(), getElement().getFirstChild() );
+			}
+			getFormatElement().insertBefore( characterStateSet.getElement(), getFormatElement().getFirstChild() );
+		}
+		return result;
+	}
+
+	@Override
+	public CharacterState parseSymbol(String symbol, Character character) {
+		CharacterStateSet stateSet = character.getCharacterStateSet();
+		CharacterState state = stateSet.lookupCharacterStateBySymbol(symbol);
+		if ( null != state ) {
+			return state;
+		} else {
+			return stateSet.createCharacterState(symbol);	
+		}
 	}
 
 	@Override
@@ -225,4 +227,4 @@ class CategoricalMatrixImpl extends
 		return "\\s+";
 	}
 
- }
+}

@@ -31,14 +31,14 @@ import org.nexml.model.OTU;
 import org.nexml.model.OTUs;
 
 public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
-	
+
 	@SuppressWarnings("serial")
 	private static final Map<String , String> xmlMolecularDataTypeFor = new HashMap<String, String>() {{
 		put(DNAData.DATATYPENAME, MolecularMatrix.DNA);
 		put(RNAData.DATATYPENAME, MolecularMatrix.RNA);
 		put(ProteinData.DATATYPENAME, MolecularMatrix.Protein);
 	}};	
-	
+
 	/**
 	 * 
 	 * @param employerEmployee
@@ -57,26 +57,23 @@ public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
 		Taxa mesTaxa = mesData.getTaxa();
 		OTUs xmlTaxa = findEquivalentTaxa(mesTaxa,xmlProject);			
 		org.nexml.model.Matrix<?> xmlMatrix = null;		
-		CharacterStateSet xmlCharacterStateSet = null;
 		String mesDataType = mesData.getDataTypeName();
 		if ( xmlMolecularDataTypeFor.containsKey(mesDataType) ) {
 			xmlMatrix = xmlProject.createMolecularMatrix(xmlTaxa,xmlMolecularDataTypeFor.get(mesDataType));
-			xmlCharacterStateSet = ((MolecularMatrix)xmlMatrix).getCharacterStateSet();
 		}
 		else if ( mesDataType.equalsIgnoreCase(CategoricalData.DATATYPENAME) ) {
 			xmlMatrix = xmlProject.createCategoricalMatrix(xmlTaxa);   
-			xmlCharacterStateSet = ((CategoricalMatrix)xmlMatrix).createCharacterStateSet();
 		}
 		else if ( mesDataType.equalsIgnoreCase(ContinuousData.DATATYPENAME) ) {
 			xmlMatrix = xmlProject.createContinuousMatrix(xmlTaxa);      			
 		}			
 		else {
 			MesquiteMessage.warnProgrammer("Can't write data type "+mesDataType);
-		}   		
-		writeCharacterStates(mesData, xmlMatrix, xmlCharacterStateSet);
+		} 
+		writeCharacterStates(mesData, xmlMatrix);
 		return xmlMatrix;
 	}
-	
+
 	/**
 	 * 
 	 * @param mesData
@@ -84,33 +81,55 @@ public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
 	 * @param xmlCharacterStateSet
 	 */
 	@SuppressWarnings("unchecked")
-	private void writeCharacterStates(CharacterData mesData, org.nexml.model.Matrix<?> xmlMatrix, CharacterStateSet xmlCharacterStateSet) {
+	private void writeCharacterStates(CharacterData mesData, org.nexml.model.Matrix<?> xmlMatrix) {
 		String mesDataType = mesData.getDataTypeName();
+		
 		int mesNchar = mesData.getNumChars();
 		List<Character> xmlCharacters = new ArrayList<Character>(mesNchar);
 		for ( int j = 0; j < mesNchar; j++ ) {
+			CharacterStateSet xmlCharacterStateSet = null;
+			if ( xmlMolecularDataTypeFor.containsKey(mesDataType) ) {
+				xmlCharacterStateSet = ((MolecularMatrix)xmlMatrix).getCharacterStateSet();
+			}
+			else if ( mesDataType.equalsIgnoreCase(CategoricalData.DATATYPENAME) ) {
+				xmlCharacterStateSet = ((CategoricalMatrix)xmlMatrix).createCharacterStateSet();
+			}
 			Character xmlChar = xmlMatrix.createCharacter(xmlCharacterStateSet);
 			String mesCharacterName = mesData.getCharacterName(j);
 			if ( null != mesCharacterName && ! mesCharacterName.equals("") ) {
 				xmlChar.setLabel(mesCharacterName);
 			}
+			if ( mesDataType.equalsIgnoreCase(CategoricalData.DATATYPENAME) ) {
+				CategoricalData data = ((CategoricalData)mesData);
+				int maxStateIndex = data.maxStateWithName(j);
+				for (int stateIndex = 0; stateIndex <= maxStateIndex; stateIndex++) {
+					String symbol = String.valueOf(data.getSymbol(stateIndex));
+					org.nexml.model.CharacterState state = xmlChar.getCharacterStateSet().createCharacterState(symbol);
+					state.setSymbol(symbol);
+					if (data.hasStateName(j, stateIndex)) {
+						String stateLabel = data.getStateName(j, stateIndex);
+						state.setLabel(stateLabel);
+					}
+				}
+			}
 			xmlCharacters.add(xmlChar);
 		}
 		for ( int j = 0; j < mesData.getNumTaxa(); j++ ) {
 			CharacterState[] mesChars = mesData.getCharacterStateArray(j, 0, mesNchar);
+			String unassignedSymbol = String.valueOf(mesData.getUnassignedSymbol());
 			Taxon mesTaxon = mesData.getTaxa().getTaxon(j);
 			OTU xmlTaxon = findEquivalentTaxon(mesTaxon,xmlMatrix.getOTUs());    			
 			for ( int k = 0; k < mesNchar; k++ ) {
 				Character xmlChar = xmlCharacters.get(k);
 				String mesCharString = mesChars[k].toDisplayString();
-				if ( mesCharString != null && !mesCharString.equals("-") ) {    					
+				if ( mesCharString != null && !mesCharString.equals("-") && !mesCharString.equals(unassignedSymbol)) {    					
 					if ( mesDataType.equalsIgnoreCase(ContinuousData.DATATYPENAME) ) {
 						MatrixCell<Double> xmlCell = (MatrixCell<Double>) xmlMatrix.getCell(xmlTaxon,xmlChar);
-						xmlCell.setValue((Double)xmlMatrix.parseSymbol(mesCharString));
+						xmlCell.setValue((Double)xmlMatrix.parseSymbol(mesCharString, xmlChar));
 					}
 					else if ( mesDataType.equalsIgnoreCase(CategoricalData.DATATYPENAME) ) {    						
 						MatrixCell<org.nexml.model.CharacterState> xmlCell = (MatrixCell<org.nexml.model.CharacterState>) xmlMatrix.getCell(xmlTaxon,xmlChar);
-						xmlCell.setValue((org.nexml.model.CharacterState)xmlMatrix.parseSymbol(mesCharString));
+						xmlCell.setValue((org.nexml.model.CharacterState)xmlMatrix.parseSymbol(mesCharString, xmlChar));
 					}
 					else if ( xmlMolecularDataTypeFor.containsKey(mesDataType) ) {
 						MatrixCell<org.nexml.model.CharacterState> xmlCell = (MatrixCell<org.nexml.model.CharacterState>) xmlMatrix.getCell(xmlTaxon,xmlChar);

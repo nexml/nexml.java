@@ -189,7 +189,8 @@ class MolecularMatrixImpl extends
     	return getMolecularCharacterStateSet(Protein);
     }
 
-	public CharacterState parseSymbol(String symbol) {
+    @Override
+	public CharacterState parseSymbol(String symbol, Character character) {
 		CharacterState state = null;
 		FIND_IN_SETS: for ( CharacterStateSet stateSet : getCharacterStateSets() ) {
 			state = stateSet.lookupCharacterStateBySymbol(symbol);

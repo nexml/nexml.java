@@ -99,7 +99,8 @@ class ContinuousMatrixImpl extends MatrixImpl<Double> implements ContinuousMatri
 		return createCharacter();
 	}
 
-	public Double parseSymbol(String symbol) {
+	@Override
+	public Double parseSymbol(String symbol, Character character) {
 		return Double.parseDouble(symbol);
 	}
 
