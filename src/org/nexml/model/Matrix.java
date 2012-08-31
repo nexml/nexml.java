@@ -69,7 +69,7 @@ public interface Matrix<T> extends OTUsLinkable, Annotatable, Segmented<Characte
 	 * @param symbol
 	 * @return
 	 */
-	T parseSymbol(String symbol);
+	T parseSymbol(String symbol, Character character);
 	
 	/**
 	 * Creates a row element for OTU otu, and populates

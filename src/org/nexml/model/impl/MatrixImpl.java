@@ -62,14 +62,7 @@ abstract class MatrixImpl<T> extends OTUsLinkableImpl<Character> implements
      * @author rvosa
      */
 	protected MatrixImpl(Document document,Element element) {
-		super(document,element);
-		for (Element rowElement : getChildrenByTagName(element, "row")) {
-			String otuId = rowElement.getAttribute("otu");
-			OTU otu = ((OTUsImpl)getOTUs()).getThingById(otuId);
-			MatrixRow<T> row = new MatrixRowImpl<T>(document, rowElement);
-			row.setOTU(otu);
-			mMatrixRows.put(otu, row);
-		}		
+		super(document,element);	
 	}
 
 	/*

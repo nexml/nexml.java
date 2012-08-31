@@ -65,7 +65,7 @@ class MolecularMatrixImpl extends
 		
 		for ( Element row : getChildrenByTagName( getMatrixElement(), "row") ) {
 			OTU otu = otus.getThingById(row.getAttribute("otu"));
-			MatrixRowImpl<CharacterState> matrixRow = new MatrixRowImpl<CharacterState>(getDocument(),row);
+			MatrixRowImpl<CharacterState> matrixRow = new MatrixRowImpl<CharacterState>(getDocument(),row, this, false);
 			matrixRow.setOTU(otu);
 			mMatrixRows.put(otu, matrixRow);
 		}
@@ -189,7 +189,8 @@ class MolecularMatrixImpl extends
     	return getMolecularCharacterStateSet(Protein);
     }
 
-	public CharacterState parseSymbol(String symbol) {
+    @Override
+	public CharacterState parseSymbol(String symbol, Character character) {
 		CharacterState state = null;
 		FIND_IN_SETS: for ( CharacterStateSet stateSet : getCharacterStateSets() ) {
 			state = stateSet.lookupCharacterStateBySymbol(symbol);
