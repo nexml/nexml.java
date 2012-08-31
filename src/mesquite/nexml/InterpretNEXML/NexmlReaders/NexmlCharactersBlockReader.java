@@ -30,6 +30,7 @@ import org.nexml.model.MatrixCell;
 import org.nexml.model.MolecularMatrix;
 import org.nexml.model.OTU;
 import org.nexml.model.OTUs;
+import org.nexml.model.UncertainCharacterState;
 
 /**
  * @author rvosa
@@ -112,9 +113,25 @@ public class NexmlCharactersBlockReader extends NexmlBlockReader {
 					}
 					org.nexml.model.CharacterState xmlState = (org.nexml.model.CharacterState)xmlCell.getValue(); 
 					if ( xmlState != null ) {
-						mesCS = new CategoricalState();
 						String xmlSymbol = xmlState.getSymbol().toString();
-						mesCS.setValue(xmlSymbol, mesMatrix);
+						if (xmlMatrix instanceof CategoricalMatrix) {
+							long stateValue = CategoricalState.emptySet();
+							if (xmlState instanceof CompoundCharacterState) {
+								for (org.nexml.model.CharacterState state : ((CompoundCharacterState)xmlState).getStates()) {
+									int memberSymbol = Integer.parseInt(state.getSymbol().toString());
+									stateValue = CategoricalState.addToSet(stateValue, memberSymbol);
+								}
+								if (xmlState instanceof UncertainCharacterState) {
+									stateValue = CategoricalState.setUncertainty(stateValue, true);
+								}
+							} else {
+								stateValue = CategoricalState.makeSet(Integer.parseInt(xmlSymbol));
+							}
+							mesCS = new CategoricalState(stateValue);
+						} else {
+							mesCS = new CategoricalState();
+							mesCS.setValue(xmlSymbol, mesMatrix);
+						}
 					}
 				}
 				if ( mesCS != null ) {
