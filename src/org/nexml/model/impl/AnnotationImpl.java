@@ -221,7 +221,8 @@ public class AnnotationImpl extends AnnotatableImpl implements Annotation {
     	mValue = value;
 		getElement().setAttribute(XSI_TYPE,ResourceMeta); 
 		for ( Annotation annotation : value ) {
-			getElement().appendChild(((AnnotationImpl)annotation).getElement());
+			Node node = getElement().getOwnerDocument().adoptNode(((AnnotationImpl)annotation).getElement());
+			getElement().appendChild(node);
 		}
     }
     
