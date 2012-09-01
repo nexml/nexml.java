@@ -137,10 +137,9 @@ class CharacterStateSetImpl extends
 	 * perhaps that needs to change.
 	 * @author rvosa
 	 */
-	public PolymorphicCharacterState createPolymorphicCharacterState(
-		Object symbol,
-		Set<CharacterState> members) {
+	public PolymorphicCharacterState createPolymorphicCharacterState(Object symbol,Set<CharacterState> members) {
 		PolymorphicCharacterStateImpl polymorphicCharacterStateImpl = new PolymorphicCharacterStateImpl(getDocument());
+		getElement().appendChild(polymorphicCharacterStateImpl.getElement());
 		polymorphicCharacterStateImpl.setSymbol(symbol);
 		polymorphicCharacterStateImpl.setStates(members);
 		getCharacterStates().add(polymorphicCharacterStateImpl);
@@ -173,9 +172,7 @@ class CharacterStateSetImpl extends
 	/**
 	 * XXX see discussion for createPolymorphicCharacterState()
 	 */
-	public UncertainCharacterState createUncertainCharacterState(
-		Object symbol,
-		Set<CharacterState> members) {
+	public UncertainCharacterState createUncertainCharacterState(Object symbol, Set<CharacterState> members) {
 		UncertainCharacterStateImpl uncertainCharacterStateImpl = new UncertainCharacterStateImpl(getDocument());
 		getElement().appendChild(uncertainCharacterStateImpl.getElement());
 		uncertainCharacterStateImpl.setSymbol(symbol);

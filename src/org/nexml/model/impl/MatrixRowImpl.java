@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.nexml.model.Character;
+import org.nexml.model.CharacterState;
 import org.nexml.model.MatrixCell;
 import org.nexml.model.MatrixRow;
 import org.w3c.dom.Document;
@@ -55,15 +56,27 @@ public class MatrixRowImpl<T> extends OTULinkableImpl implements MatrixRow<T> {
      * the <otus/> element)
      * @author rvosa
      */
-	protected MatrixRowImpl(Document document, Element element) {
+	protected MatrixRowImpl(Document document, Element element, MatrixImpl<T> matrix, boolean continuous) {
 		super(document, element);
+		mMatrix = matrix;
 		List<Element> seqElements = getChildrenByTagName(element, "seq");
 		if ( ! seqElements.isEmpty() ) {
 			mSeqElement = seqElements.get(0);
 		}
 		List<Element> cellElements = getChildrenByTagName(element, "cell");
 		for ( Element cellElement : cellElements ) {
+			Character character = findCharacter(cellElement.getAttribute("char"));
+			Object value;
+			if (continuous) {
+				value = Double.parseDouble(cellElement.getAttribute("state"));
+				
+			} else {
+				value = findState(cellElement.getAttribute("state"), character);
+			}
+			mStateForCharacter.put(character, (T)value);
 			MatrixCellImpl<T> cell = new MatrixCellImpl<T>(getDocument(),cellElement);
+			cell.setValue((T)value);
+			mCellForCharacter.put(character, cell);
 			mMatrixCell.add(cell);
 		}
 	}	
@@ -194,6 +207,24 @@ public class MatrixRowImpl<T> extends OTULinkableImpl implements MatrixRow<T> {
 	
 	private MatrixImpl<T> getMatrix() {
 		return mMatrix;
+	}
+	
+	private Character findCharacter(String id) {
+		for (Character character : getMatrix().getCharacters()) {
+			if (character.getId().equals(id)) {
+				return character;
+			}
+		}
+		return null;
+	}
+	
+	private CharacterState findState(String id, Character character) {
+		for (CharacterState state : character.getCharacterStateSet().getCharacterStates()) {
+			if (state.getId().equals(id)) {
+				return state;
+			}
+		}
+		return null;
 	}
 
 }

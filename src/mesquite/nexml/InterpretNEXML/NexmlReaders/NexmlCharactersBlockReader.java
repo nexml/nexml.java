@@ -23,12 +23,14 @@ import mesquite.lib.duties.CharactersManager;
 import org.nexml.model.Annotatable;
 import org.nexml.model.CategoricalMatrix;
 import org.nexml.model.Character;
+import org.nexml.model.CompoundCharacterState;
 import org.nexml.model.ContinuousMatrix;
 import org.nexml.model.Matrix;
 import org.nexml.model.MatrixCell;
 import org.nexml.model.MolecularMatrix;
 import org.nexml.model.OTU;
 import org.nexml.model.OTUs;
+import org.nexml.model.UncertainCharacterState;
 
 /**
  * @author rvosa
@@ -70,7 +72,7 @@ public class NexmlCharactersBlockReader extends NexmlBlockReader {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param mesDataType
@@ -90,21 +92,48 @@ public class NexmlCharactersBlockReader extends NexmlBlockReader {
 			for ( Character xmlCharacter : xmlCharacterList ) {
 				CharacterState mesCS = null;
 				MatrixCell<?> xmlCell = xmlMatrix.getCell(xmlOTU, xmlCharacter);
-        		if ( mesMatrix instanceof ContinuousData ) {       
-        			Double xmlDouble = (Double)xmlCell.getValue();
-        			if ( xmlDouble != null ) {
-        				mesCS = new ContinuousState(xmlDouble);
-        				((ContinuousState)mesCS).setNumItems(1); // XXX for multidimensional matrices
-        			}
-        		}
-        		else {        			
-        			org.nexml.model.CharacterState xmlState = (org.nexml.model.CharacterState)xmlCell.getValue(); 
-        			if ( xmlState != null ) {
-        				mesCS = new CategoricalState();
-        				String xmlSymbol = xmlState.getSymbol().toString();
-        				mesCS.setValue(xmlSymbol, mesMatrix);
-        			}
-        		}
+				if ( mesMatrix instanceof ContinuousData ) {       
+					Double xmlDouble = (Double)xmlCell.getValue();
+					if ( xmlDouble != null ) {
+						mesCS = new ContinuousState(xmlDouble);
+						((ContinuousState)mesCS).setNumItems(1); // XXX for multidimensional matrices
+					}
+				}
+				else {
+					if (xmlMatrix instanceof CategoricalMatrix) {
+						for (org.nexml.model.CharacterState state : xmlCharacter.getCharacterStateSet().getCharacterStates()) {
+							if (!(state instanceof CompoundCharacterState)) {
+								String label = state.getLabel();
+								if ((null != label) && (!label.equals("")) && (mesMatrix instanceof CategoricalData)) {
+									int stateIndex = Integer.parseInt(state.getSymbol().toString());
+									((CategoricalData)mesMatrix).setStateName(mesCharacter, stateIndex, label);
+								}
+							}
+						}
+					}
+					org.nexml.model.CharacterState xmlState = (org.nexml.model.CharacterState)xmlCell.getValue(); 
+					if ( xmlState != null ) {
+						String xmlSymbol = xmlState.getSymbol().toString();
+						if (xmlMatrix instanceof CategoricalMatrix) {
+							long stateValue = CategoricalState.emptySet();
+							if (xmlState instanceof CompoundCharacterState) {
+								for (org.nexml.model.CharacterState state : ((CompoundCharacterState)xmlState).getStates()) {
+									int memberSymbol = Integer.parseInt(state.getSymbol().toString());
+									stateValue = CategoricalState.addToSet(stateValue, memberSymbol);
+								}
+								if (xmlState instanceof UncertainCharacterState) {
+									stateValue = CategoricalState.setUncertainty(stateValue, true);
+								}
+							} else {
+								stateValue = CategoricalState.makeSet(Integer.parseInt(xmlSymbol));
+							}
+							mesCS = new CategoricalState(stateValue);
+						} else {
+							mesCS = new CategoricalState();
+							mesCS.setValue(xmlSymbol, mesMatrix);
+						}
+					}
+				}
 				if ( mesCS != null ) {
 					mesMatrix.setState(mesCharacter, mesTaxon, mesCS);
 					//can add in character state stuff here

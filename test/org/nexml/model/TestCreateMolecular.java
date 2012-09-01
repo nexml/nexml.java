@@ -35,7 +35,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : characters ) {
         		Long l = new Long(Math.round(Math.random()*(symbols.length-1)));
-        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()]));
+        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()], character));
         	}
         }
         
@@ -72,7 +72,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : characters ) {
         		Long l = new Long(Math.round(Math.random()*(symbols.length-1)));
-        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()]));
+        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()], character));
         	}
         }
         
@@ -109,7 +109,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : characters ) {
         		Long l = new Long(Math.round(Math.random()*(symbols.length-1)));
-        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()]));
+        		matrix.getCell(otu, character).setValue(matrix.parseSymbol(symbols[l.intValue()], character));
         	}
         }
         
@@ -145,7 +145,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : dnaCharacters ) {
         		Long l = new Long(Math.round(Math.random()*(dnaSymbols.length-1)));
-        		dnaMatrix.getCell(otu, character).setValue(dnaMatrix.parseSymbol(dnaSymbols[l.intValue()]));
+        		dnaMatrix.getCell(otu, character).setValue(dnaMatrix.parseSymbol(dnaSymbols[l.intValue()], character));
         	}
         }
 		
@@ -164,7 +164,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : rnaCharacters ) {
         		Long l = new Long(Math.round(Math.random()*(rnaSymbols.length-1)));
-        		rnaMatrix.getCell(otu, character).setValue(rnaMatrix.parseSymbol(rnaSymbols[l.intValue()]));
+        		rnaMatrix.getCell(otu, character).setValue(rnaMatrix.parseSymbol(rnaSymbols[l.intValue()], character));
         	}
         }
         
@@ -183,7 +183,7 @@ public class TestCreateMolecular {
         for ( OTU otu : otus.getAllOTUs() ) {
         	for ( Character character : proteinCharacters ) {
         		Long l = new Long(Math.round(Math.random()*(proteinSymbols.length-1)));
-        		proteinMatrix.getCell(otu, character).setValue(proteinMatrix.parseSymbol(proteinSymbols[l.intValue()]));
+        		proteinMatrix.getCell(otu, character).setValue(proteinMatrix.parseSymbol(proteinSymbols[l.intValue()], character));
         	}
         }
         
