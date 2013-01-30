@@ -22,17 +22,17 @@ import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandlerImpl;
 
 public class NexmlMesquiteManager {
 	private static boolean debugging = true;
-
-	private Properties mPredicateHandlerMapping;
+	
+	private Properties mPredicateHandlerMapping;	
 	private Properties mNamespaceHandlerMapping;
-
+	
 	private EmployerEmployee mEmployerEmployee;
-
+	
 	/**
-	 *
+	 * 
 	 * @param employerEmployee
 	 */
-	public NexmlMesquiteManager (EmployerEmployee employerEmployee) {
+	public NexmlMesquiteManager (EmployerEmployee employerEmployee) { 
 		mEmployerEmployee = employerEmployee;
 		mPredicateHandlerMapping = new Properties();
 		mNamespaceHandlerMapping = new Properties();
@@ -43,26 +43,26 @@ public class NexmlMesquiteManager {
 	    	e.printStackTrace();
 	    }
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @return
 	 */
 	protected EmployerEmployee getEmployerEmployee() {
 		return mEmployerEmployee;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param s
 	 */
 	public static void debug(String s) {
 		if (debugging)
 			mesquite.lib.MesquiteMessage.notifyProgrammer(s);
-	}
-
+	}	
+	
 	/**
-	 *
+	 * 
 	 * @param annotation
 	 * @return
 	 */
@@ -70,14 +70,14 @@ public class NexmlMesquiteManager {
 		String property = annotation.getProperty();
 		if ( property.equals("") ) {
 			property = annotation.getRel();
-		}
+		}			
 		String[] curie = property.split(":");
-		String localProperty = curie[1]; // NameReference;	lookup in properties
+		String localProperty = curie[1]; // NameReference;	lookup in properties		
 		return localProperty;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param subject
 	 * @param predicate
 	 * @param value
@@ -91,7 +91,7 @@ public class NexmlMesquiteManager {
 			try {
 				Class<?> handlerClass = Class.forName(handlerClassName);
 				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);
+				ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);	
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -101,23 +101,19 @@ public class NexmlMesquiteManager {
 		}
 		debug("Using predicateHandler " + ph.toString());
 		return ph;
-	}
-
+	}	
+	
 	/**
-	 *
+	 * 
 	 * @param uri
 	 * @return
 	 */
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
 		String handlerClassName = null;
 		String uriString = annotation.getPredicateNamespace().toString();
-			debug("looking for " + uriString);
 		for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-			debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
 			if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
 				handlerClassName = name;
-				debug ("found " + handlerClassName);
-				break;
 			}
 		}
 		NamespaceHandler nh = null;
@@ -125,10 +121,10 @@ public class NexmlMesquiteManager {
 			try {
 				Class<?> handlerClass = Class.forName(handlerClassName);
 				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);
+				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);	
 			} catch (Exception e) {
 				e.printStackTrace();
-			}
+			}			
 		}
 		if ( null == nh ) {
 			debug("no namespace handler");
@@ -138,9 +134,9 @@ public class NexmlMesquiteManager {
 		}
 		return nh;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param mesTaxa
 	 * @param xmlProject
 	 * @return
@@ -154,9 +150,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param mesTaxon
 	 * @param xmlTaxa
 	 * @return
@@ -168,12 +164,12 @@ public class NexmlMesquiteManager {
 			if ( msqUIDs.contains(mesTaxonIndex) ) {
 				return xmlTaxon;
 			}
-		}
+		}		
 		return null;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param xmlOTUs
 	 * @param mesProject
 	 * @return
@@ -189,9 +185,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-
+	
 	/**
-	 *
+	 * 
 	 * @param xmlOTU
 	 * @param mesTaxa
 	 * @return
@@ -206,5 +202,5 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-
+	
 }

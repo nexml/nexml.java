@@ -17,7 +17,7 @@ import mesquite.lib.MesquiteProject;
 public abstract class NexmlBlockReader extends NexmlReader {
 
 	/**
-	 *
+	 * 
 	 * @param employerEmployee
 	 */
 	public NexmlBlockReader(EmployerEmployee employerEmployee) {
@@ -25,30 +25,29 @@ public abstract class NexmlBlockReader extends NexmlReader {
 	}
 
 	/**
-	 *
+	 * 
 	 * @param xmlProject
 	 * @param mesBlock
 	 * @return
 	 */
 	protected abstract FileElement readBlock(MesquiteProject mesProject, MesquiteFile mesFile, Annotatable xmlAnnotatable, OTUs xmlOTUs);
-
+	
 	/**
-	 *
+	 * 
 	 * @param mesBlock
 	 * @param index
 	 * @return
 	 */
 	protected abstract Listable getThingInMesquiteBlock(FileElement mesBlock,int index);
-
+	
 	/**
-	 *
+	 * 
 	 * @param mesProject
 	 * @param mesFile
 	 * @param xmlBlocks
 	 */
 	public void readBlocks(MesquiteProject mesProject, MesquiteFile mesFile, List<Annotatable> xmlBlocks) {
 		for ( Annotatable xmlAnnotatable : xmlBlocks ) {
-			debug("reading blocks using " + this.getClass().getName());
 			OTUs xmlOTUs = null;
 			if ( xmlAnnotatable instanceof OTUsLinkable ) {
 				xmlOTUs = ((OTUsLinkable)xmlAnnotatable).getOTUs();
@@ -65,8 +64,8 @@ public abstract class NexmlBlockReader extends NexmlReader {
 				}
 			}
 			mesFE.addToFile(mesFile, mesProject, getEmployerEmployee().findElementManager(mesFE.getClass()));
-		}
+		}		
 	}
-
-
+	
+	
 }
