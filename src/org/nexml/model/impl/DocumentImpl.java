@@ -34,9 +34,9 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
      * an element object are used for generating new element nodes in
      * a NeXML document. On calling such constructors, a new element
      * is created, which can be retrieved using getElement(). After this
-     * step, the Impl class that called this constructor would still
+     * step, the Impl class that called this constructor would still 
      * need to attach the element in the proper location (typically
-     * as a child element of the class that called the constructor).
+     * as a child element of the class that called the constructor). 
      * @param document a DOM document object
      * @author rvosa
      */
@@ -50,7 +50,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
      * its argument. This is so that we can start the recursive
      * element traversal from outside this packages, e.g. in the
      * DocumentFactory.
-     * @param document the containing DOM document object. Every Impl
+     * @param document the containing DOM document object. Every Impl 
      * class needs a reference to this so that it can create DOM element
      * objects
      * @param element the <nex:nexml/> root element
@@ -60,20 +60,18 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 		super(document, element);
 		if ( ! element.getOwnerDocument().equals(document) ) {
 			throw new RuntimeException("This'll never work");
-		}
+		}		
 
 		List<Element> oTUsElements = getChildrenByTagName(element, OTUsImpl.getTagNameClass());
 
-
 		for (Element thisElement : oTUsElements) {
-
 			OTUsImpl otus = new OTUsImpl(document, thisElement);
 			mOtusList.add(otus);
 		}
 
 		List<Element> treeBlockElements = getChildrenByTagName(element, TreeBlockImpl.getTagNameClass());
 		for (Element treeBlockElement : treeBlockElements) {
-			String oTUsId = treeBlockElement.getAttribute("otus");
+			String oTUsId = treeBlockElement.getAttribute("otus");			
 			TreeBlockImpl treeBlock = new TreeBlockImpl(document,treeBlockElement,getOTUsById(oTUsId));
 			mTreeBlockList.add(treeBlock);
 		}
@@ -82,7 +80,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 		List<Element> charsBlockElements = getChildrenByTagName(document
 				.getDocumentElement(), MatrixImpl.getTagNameClass());
 		for (Element charsBlock : charsBlockElements) {
-
+			
 			List<Element> formatElements = getChildrenByTagName(charsBlock, "format");
 			for (Element thisE : formatElements) {
 				List<Element> charElements = getChildrenByTagName(thisE, "char");
@@ -91,16 +89,16 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 					characterNames.add(charLabel.trim());
 				}
 			}
-
-
+			
+			
 			String xsiType = charsBlock.getAttribute(XSI_TYPE);
 			Matrix<?> matrix = null;
 			//xsiType = xsiType.replaceAll("Seqs", "Cells");
 			charsBlock.setAttribute(XSI_TYPE, xsiType);
 			if (xsiType.indexOf("Continuous") > 0) {
-				matrix = new ContinuousMatrixImpl(getDocument(), charsBlock,
+				matrix = new ContinuousMatrixImpl(getDocument(), charsBlock, 
 					(OTUsImpl)getOTUsById(charsBlock.getAttribute("otus")));
-			}
+			} 
 			else if ( xsiType.indexOf(MolecularMatrixImpl.DNA) > 0 ) {
 				matrix = new MolecularMatrixImpl(getDocument(), charsBlock,
 					(OTUsImpl)getOTUsById(charsBlock.getAttribute("otus")),
@@ -112,13 +110,13 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 					(OTUsImpl)getOTUsById(charsBlock.getAttribute("otus")),
 					MolecularMatrixImpl.RNA
 					);
-			}
+			}		
 			else if ( xsiType.indexOf(MolecularMatrixImpl.Protein) > 0 ) {
 				matrix = new MolecularMatrixImpl(getDocument(), charsBlock,
 					(OTUsImpl)getOTUsById(charsBlock.getAttribute("otus")),
 					MolecularMatrixImpl.Protein
 					);
-			}
+			}			
 			else {
 				matrix = new CategoricalMatrixImpl(getDocument(), charsBlock,
 					(OTUsImpl)getOTUsById(charsBlock.getAttribute("otus")));				
@@ -145,7 +143,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 
 	/**
 	 * This method creates an otus element and appends it to the document root.
-	 *
+	 * 
 	 * @author rvosa
 	 */
 	public OTUs createOTUs() {
@@ -160,7 +158,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 	 * Because NeXML requires that trees elements have an id reference attribute
 	 * to specify the otus element it refers to, the equivalent OTUs object
 	 * needs to be passed in here.
-	 *
+	 * 
 	 * @author rvosa
 	 */
 	public TreeBlock createTreeBlock(OTUs otus) {
@@ -188,7 +186,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 	 * characters elements need to specify the concrete subclass they implement
 	 * (the xsi:type business). XXX Here, this subclass is set to StandardCells.
 	 * Hopefully we come up with a better way to do this.
-	 *
+	 * 
 	 * @author rvosa
 	 */
 	public CategoricalMatrix createCategoricalMatrix(OTUs otus) {
@@ -209,7 +207,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 	 * characters elements need to specify the concrete subclass they implement
 	 * (the xsi:type business). XXX Here, this subclass is set to
 	 * ContinuousCells. Hopefully we come up with a better way to do this.
-	 *
+	 * 
 	 * @author rvosa
 	 */
 	public ContinuousMatrix createContinuousMatrix(OTUs otus) {
@@ -230,11 +228,11 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 	 *            have an id reference attribute to specify the otus element it
 	 *            refers to, the equivalent OTUs object needs to be passed in
 	 *            here. In addition, characters elements need to specify the
-	 *            concrete subclass they implement (the xsi:type business).
+	 *            concrete subclass they implement (the xsi:type business). 
 	 *            XXX Here, this subclass is set to a molecular sequence type as
 	 *            specified in param type. Hopefully we come up with a better
 	 *            way to do this.
-	 *
+	 * 
 	 * @author pmidford
 	 */
 	public MolecularMatrix createMolecularMatrix(OTUs otus, String type) {
@@ -276,7 +274,7 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 	public List<OTUs> getOTUsList() {
 		return mOtusList;
 	}
-
+	
 	protected OTUs getOTUsById(String id) {
 		if ( null == id ) {
 			return null;
