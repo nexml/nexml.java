@@ -4,7 +4,9 @@
 package mesquite.nexml.InterpretNEXML.AnnotationHandlers;
 
 import java.lang.reflect.Method;
-import java.io.File;
+import java.io.*;
+import java.util.*;
+
 
 import mesquite.lib.Associable;
 import mesquite.lib.Listable;
@@ -14,7 +16,7 @@ import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
 
-import cz.vutbr.web.css.*;
+import com.osbcp.cssparser.*;
 
 
 /**
@@ -26,6 +28,7 @@ public class TSSHandler extends NamespaceHandler {
 	private Object mValue;
 	private String mPredicate;
 	private File mTSSFile;
+	private List<Rule> mTSSList;
 
 	/**
 	 * @param subject
@@ -35,13 +38,24 @@ public class TSSHandler extends NamespaceHandler {
 	public TSSHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
 		mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
-        try {
-            StyleSheet ss = CSSFactory.parse("h1 { line-height: 1; }");
-            System.out.println("Style:");
-            System.out.println(ss);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		 Scanner scanner = null;
+		 String cssString = "";
+	try {
+    	scanner = new Scanner(mTSSFile);
+    } catch (Exception e) {
+		NexmlMesquiteManager.debug(e.toString());
+    }
+      while (scanner.hasNextLine()){
+        //process each line in some way
+		cssString = cssString + scanner.nextLine();
+      }
+
+		try {
+			mTSSList = CSSParser.parse(cssString);
+			NexmlMesquiteManager.debug("there are " + mTSSList.size() + " in the tss file");
+		} catch (Exception e) {
+			NexmlMesquiteManager.debug(e.toString());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -155,16 +169,11 @@ public class TSSHandler extends NamespaceHandler {
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
 		String tssClass = parts[1];
-		NexmlMesquiteManager.debug("TSSHandler is looking for class: "+tssClass);
-		NexmlMesquiteManager.debug("the TSS file should be in "+ mTSSFile);
 		Method method = null;
-		Object value = getValue();
-		NexmlMesquiteManager.debug("TSSHandler value: "+value);
+		String value = getValue().toString();
 		if ( null != value ) {
 			try {
-// 				NexmlMesquiteManager.debug("We want to call "+ associable.getClass().getName());
-// 				method = associable.getClass().getMethod(tssClass, value.getClass());
-// 				method.invoke(associable, value);
+				findTSSClass(tssClass, value);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -178,4 +187,21 @@ public class TSSHandler extends NamespaceHandler {
 
 	}
 
+	public List<PropertyValue> findTSSClass (String tssClassName, String tssValue) {
+		int i = 1;
+// here we need to process the tssValue to see if it's a string or range, because those are special cases for selectors
+		for (Rule eachClass : mTSSList) {
+			List<Selector> selectors = eachClass.getSelectors();
+			List<PropertyValue> pvs = eachClass.getPropertyValues();
+			i++;
+			for (Selector eachSelector : selectors) {
+				NexmlMesquiteManager.debug("\tlooking at selector "+ eachSelector.toString());
+				if (eachSelector.toString().equals(tssClassName)) {
+					NexmlMesquiteManager.debug("FOUND THE SELECTOR");
+					return pvs;
+				}
+			}
+		}
+		return null;
+	}
 }
