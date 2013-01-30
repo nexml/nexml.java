@@ -13,16 +13,17 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class DocumentFactory {
-	
+
 	/**
 	 * Creates a new NeXML document, to be populated programmatically.
 	 * @return an org.nexml.model.Document object
 	 * @throws ParserConfigurationException
 	 */
 	static public Document createDocument() throws ParserConfigurationException {
+			mesquite.lib.MesquiteMessage.notifyProgrammer("howdy ho2");
 		return new DocumentImpl(getDocumentBuilder().newDocument());
 	}
-	
+
 	/**
 	 * Creates a new NeXML document, to be populated programmatically.
 	 * Catches ParserConfigurationException internally, prints stack trace
@@ -49,9 +50,13 @@ public class DocumentFactory {
 	 */
 	static public Document parse(InputStream inputStream)
 			throws ParserConfigurationException, SAXException, IOException {
-		return createDocument(getDocumentBuilder().parse(inputStream));
+			DocumentBuilder documentBuilder = getDocumentBuilder();
+			org.w3c.dom.Document parsed = documentBuilder.parse(inputStream);
+			mesquite.lib.MesquiteMessage.notifyProgrammer("argle3");
+
+		return createDocument(parsed);
 	}
-	
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -81,9 +86,10 @@ public class DocumentFactory {
 	 */
 	static public Document parse(String uri) throws SAXException, IOException,
 			ParserConfigurationException {
+				mesquite.lib.MesquiteMessage.notifyProgrammer("argle2");
 		return createDocument(getDocumentBuilder().parse(uri));
 	}
-	
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -100,7 +106,7 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
+	}
 
 	/**
 	 * Parses a NeXML document, returns a populated object hierarchy
@@ -113,9 +119,10 @@ public class DocumentFactory {
 	 */
 	static public Document parse(File file) throws SAXException, IOException,
 			ParserConfigurationException {
+				mesquite.lib.MesquiteMessage.notifyProgrammer("argle");
 		return createDocument(getDocumentBuilder().parse(file));
 	}
-	
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -132,7 +139,7 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
+	}
 
 	/**
 	 * Parses a NeXML document, returns a populated object hierarchy
@@ -145,6 +152,7 @@ public class DocumentFactory {
 	 */
 	static public Document parse(InputSource inputSource) throws SAXException,
 			IOException, ParserConfigurationException {
+				mesquite.lib.MesquiteMessage.notifyProgrammer("argle4");
 		return createDocument(getDocumentBuilder().parse(inputSource));
 	}
 
@@ -164,9 +172,10 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
-	
+	}
+
 	static private Document createDocument(org.w3c.dom.Document domDocument) {
+			mesquite.lib.MesquiteMessage.notifyProgrammer("howdy ho8");
 		return new DocumentImpl(domDocument, domDocument.getDocumentElement());
 	}
 
