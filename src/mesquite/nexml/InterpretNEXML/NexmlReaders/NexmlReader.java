@@ -20,40 +20,44 @@ import org.nexml.model.Matrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
 
-public class NexmlReader extends NexmlMesquiteManager {	
-		
+public class NexmlReader extends NexmlMesquiteManager {
+
 	/**
-	 * 
+	 *
 	 * @param employerEmployee
 	 */
-	public NexmlReader (EmployerEmployee employerEmployee) { 
+	public NexmlReader (EmployerEmployee employerEmployee) {
 		super(employerEmployee);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlDocument
 	 * @param mesProject
 	 * @return
 	 */
 	public MesquiteProject fillProjectFromNexml(Document xmlDocument,MesquiteProject mesProject) {
+		debug("we are starting the reading...");
 		List<OTUs> xmlOTUsList = xmlDocument.getOTUsList();
+		debug ("there are " + xmlOTUsList.size() + " OTUs.");
 		MesquiteFile mesFile = mesProject.getFile(0);
-		
 		// process taxa blocks
-		NexmlOTUsBlockReader nobr = new NexmlOTUsBlockReader(getEmployerEmployee());		
+		NexmlOTUsBlockReader nobr = new NexmlOTUsBlockReader(getEmployerEmployee());
 		List<Annotatable> xmlAnnoOTUsList = new ArrayList<Annotatable>();
 		for ( OTUs xmlOTUs : xmlDocument.getOTUsList() ) {
+			debug("reading an OTU...");
 			xmlAnnoOTUsList.add(xmlOTUs);
 		}
 		nobr.readBlocks(mesProject, mesFile, xmlAnnoOTUsList);
-		
+
 		for ( OTUs xmlOTUs : xmlOTUsList ) {
-			
+
 			// process tree blocks
 			NexmlTreeBlockReader ntbr = new NexmlTreeBlockReader(getEmployerEmployee());
+			debug("about to read trees...");
 			List<Annotatable> xmlAnnoTreeBlockList = new ArrayList<Annotatable>();
 			for ( TreeBlock xmlTreeBlock : xmlDocument.getTreeBlockList(xmlOTUs) ) {
+				debug("reading a tree...");
 				xmlAnnoTreeBlockList.add(xmlTreeBlock);
 			}
 			ntbr.readBlocks(mesProject, mesFile, xmlAnnoTreeBlockList);
@@ -62,15 +66,15 @@ public class NexmlReader extends NexmlMesquiteManager {
 			NexmlCharactersBlockReader ncbr = new NexmlCharactersBlockReader(getEmployerEmployee());
 			List<Annotatable> xmlCharactersBlockList = new ArrayList<Annotatable>();
 			for ( Matrix<?> xmlMatrix : xmlDocument.getMatrices(xmlOTUs) ) {
-				xmlCharactersBlockList.add(xmlMatrix);				
-			}			
+				xmlCharactersBlockList.add(xmlMatrix);
+			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
 		return mesProject;
-	}	
-	
+	}
+
 	/**
-	 * 
+	 *
 	 * @param mesAttachable
 	 * @param mesAnnotatable
 	 */
@@ -87,9 +91,9 @@ public class NexmlReader extends NexmlMesquiteManager {
 			mesAttachable.attach(aw);
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesAssociable
 	 * @param xmlAnnotatable
 	 * @param segmentCount
@@ -101,7 +105,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 			if ( null == handler ) {
 				handler = getPredicateHandler(xmlAnnotatable,xmlAnnotation);
 			}
-			Object convertedValue = handler.getValue();			
+			Object convertedValue = handler.getValue();
 			debug("using Handler "+handler+" with converted value "+convertedValue);
 			if ( convertedValue instanceof Boolean ) {
 				NameReference mesNr = mesAssociable.makeAssociatedBits(handler.getPredicate());
@@ -116,8 +120,8 @@ public class NexmlReader extends NexmlMesquiteManager {
 			else if ( convertedValue instanceof Long ) {
 				NameReference mesNr = mesAssociable.makeAssociatedLongs(handler.getPredicate());
 				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
-				mesAssociable.setAssociatedLong(mesNr,segmentCount,(Long)convertedValue);					
-			}	
+				mesAssociable.setAssociatedLong(mesNr,segmentCount,(Long)convertedValue);
+			}
 			else if ( convertedValue instanceof Object ) {
 				NameReference mesNr = mesAssociable.makeAssociatedObjects(handler.getPredicate());
 				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
@@ -125,7 +129,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 			handler.read(mesAssociable, mesListable, segmentCount);
 		}
-		
-	}			
-	
+
+	}
+
 }

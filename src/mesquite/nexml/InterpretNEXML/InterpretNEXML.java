@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package mesquite.nexml.InterpretNEXML;
 
@@ -19,27 +19,27 @@ public class InterpretNEXML extends FileInterpreterI {
 	public boolean startJob(String arguments, Object condition, boolean hiredByName) {
  		return true;  //make this depend on taxa reader being found?)
 	}
-  	 
+
 /*.................................................................................................................*/
 	public String preferredDataFileExtension() {
  		return "xml";
 	}
 /*.................................................................................................................*/
-	public boolean canExportEver() {  
+	public boolean canExportEver() {
 		 return true;  //
 	}
 /*.................................................................................................................*/
-	public boolean canExportProject(MesquiteProject project) {  
+	public boolean canExportProject(MesquiteProject project) {
 		 return true;
 	}
-	
+
 /*.................................................................................................................*/
 	@SuppressWarnings("rawtypes")
-	public boolean canExportData(Class dataClass) {  
+	public boolean canExportData(Class dataClass) {
 		return true;
 	}
 /*.................................................................................................................*/
-	public boolean canImport() {  
+	public boolean canImport() {
 		 return true;
 	}
 
@@ -51,29 +51,34 @@ public class InterpretNEXML extends FileInterpreterI {
 			fs = new FileInputStream(file.getPath());
 			xmlDocument = DocumentFactory.parse(fs);
 		} catch ( Exception e ) {
+			mesquite.lib.MesquiteMessage.notifyProgrammer("Exception: " + e.toString());
 			e.printStackTrace();
-		}	
-		NexmlReader nr = new NexmlReader(this);		
-	    nr.fillProjectFromNexml(xmlDocument,project);			
-	}		
+		}
+		NexmlReader nr = new NexmlReader(this);
+		try {
+			nr.fillProjectFromNexml(xmlDocument,project);
+	    } catch ( Exception e) {
+	    	e.printStackTrace();
+	    }
+	}
 
 /* ============================  exporting ============================*/
 	/*.................................................................................................................*/
 	// XXX make compact/verbose switch
 	public boolean getExportOptions(boolean dataSelected, boolean taxaSelected){
 		return true;
-	}	
+	}
 
-	
+
 	/*.................................................................................................................*/
 	public boolean exportFile(MesquiteFile file, String arguments) {
 		MesquiteProject mesProject = getProject();
-		NexmlWriter nw = new NexmlWriter(this);			    		
+		NexmlWriter nw = new NexmlWriter(this);
 		Document xmlProject = nw.createDocumentFromProject(mesProject);
-		StringBuffer outputBuffer = new StringBuffer();		
+		StringBuffer outputBuffer = new StringBuffer();
 		String xmlString = null;
 		try {
-			xmlString = xmlProject.getXmlString();			
+			xmlString = xmlProject.getXmlString();
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
@@ -87,7 +92,7 @@ public class InterpretNEXML extends FileInterpreterI {
 		return "NeXML (taxa, matrices, trees and annotations)";
    	 }
 	/*.................................................................................................................*/
-   	 
+
  	/** returns an explanation of what the module does.*/
  	public String getExplanation() {
  		return "Imports and exports NeXML2009 files (see http://www.nexml.org)" ;
