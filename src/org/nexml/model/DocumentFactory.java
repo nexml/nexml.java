@@ -20,7 +20,6 @@ public class DocumentFactory {
 	 * @throws ParserConfigurationException
 	 */
 	static public Document createDocument() throws ParserConfigurationException {
-			mesquite.lib.MesquiteMessage.notifyProgrammer("howdy ho2");
 		return new DocumentImpl(getDocumentBuilder().newDocument());
 	}
 
@@ -52,8 +51,6 @@ public class DocumentFactory {
 			throws ParserConfigurationException, SAXException, IOException {
 			DocumentBuilder documentBuilder = getDocumentBuilder();
 			org.w3c.dom.Document parsed = documentBuilder.parse(inputStream);
-			mesquite.lib.MesquiteMessage.notifyProgrammer("argle3");
-
 		return createDocument(parsed);
 	}
 
@@ -86,7 +83,6 @@ public class DocumentFactory {
 	 */
 	static public Document parse(String uri) throws SAXException, IOException,
 			ParserConfigurationException {
-				mesquite.lib.MesquiteMessage.notifyProgrammer("argle2");
 		return createDocument(getDocumentBuilder().parse(uri));
 	}
 
@@ -152,7 +148,6 @@ public class DocumentFactory {
 	 */
 	static public Document parse(InputSource inputSource) throws SAXException,
 			IOException, ParserConfigurationException {
-				mesquite.lib.MesquiteMessage.notifyProgrammer("argle4");
 		return createDocument(getDocumentBuilder().parse(inputSource));
 	}
 
@@ -175,7 +170,6 @@ public class DocumentFactory {
 	}
 
 	static private Document createDocument(org.w3c.dom.Document domDocument) {
-			mesquite.lib.MesquiteMessage.notifyProgrammer("howdy ho8");
 		return new DocumentImpl(domDocument, domDocument.getDocumentElement());
 	}
 
