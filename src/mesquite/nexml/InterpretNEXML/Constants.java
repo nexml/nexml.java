@@ -24,4 +24,6 @@ public class Constants {
 
 	public static final String PREDICATES_PROPERTIES = "predicateHandlerMapping.properties";
 	public static final String NAMESPACE_PROPERTIES = "namespaceHandlerMapping.properties";
+
+	public static final String NO_RULE = "NO_RULE";
 }

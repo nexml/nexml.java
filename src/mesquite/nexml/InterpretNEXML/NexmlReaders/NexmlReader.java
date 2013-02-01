@@ -2,6 +2,7 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 import mesquite.lib.Associable;
 import mesquite.lib.Attachable;
 import mesquite.lib.EmployerEmployee;
@@ -12,6 +13,7 @@ import mesquite.lib.NameReference;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
+import mesquite.nexml.InterpretNEXML.Constants;
 
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
@@ -106,8 +108,38 @@ public class NexmlReader extends NexmlMesquiteManager {
 				handler = getPredicateHandler(xmlAnnotatable,xmlAnnotation);
 			}
 			Object convertedValue = handler.getValue();
-			debug("using Handler "+handler+" with converted value "+convertedValue);
-			if ( convertedValue instanceof Boolean ) {
+			Object subj = handler.getSubject();
+			Object pred = handler.getPredicate();
+
+			handler.read(mesAssociable, mesListable, segmentCount);
+ 			// Adding annotations for interpreting TSS commands:
+			debug("annotating " + segmentCount + " " + pred + " with value "+convertedValue);
+ 			if ( pred.toString().contains("tss:")) {
+				// if the TSSHandler handled this, getValue will now contain the mesquite-converted prop list
+ 				convertedValue = handler.getValue();
+ 				if (convertedValue.equals(Constants.NO_RULE)) {
+ 					debug ("couldn't find " + pred.toString());
+					// no rule specified
+ 				}
+ 				else if (convertedValue != null) {
+					debug("tss formatstring should now be "+ convertedValue);
+					String[] mesProps = convertedValue.toString().split(";");
+					for (String prop : mesProps) {
+						if (!prop.equals("")) {
+							String[] propParts = prop.split(":");
+							String convertedProp = propParts[0];
+							String convertedVal = propParts[1];
+							debug("setting the annotation as " + convertedProp + ":" + convertedVal);
+							NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
+							mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
+							mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
+						}
+					}
+				}
+ 			}
+			else if ( convertedValue instanceof Boolean ) {
+//
+//  			if ( convertedValue instanceof Boolean ) {
 				NameReference mesNr = mesAssociable.makeAssociatedBits(handler.getPredicate());
 				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
 				mesAssociable.setAssociatedBit(mesNr,segmentCount,(Boolean)convertedValue);
@@ -127,7 +159,6 @@ public class NexmlReader extends NexmlMesquiteManager {
 				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
 				mesAssociable.setAssociatedObject(mesNr,segmentCount,convertedValue);
 			}
-			handler.read(mesAssociable, mesListable, segmentCount);
 		}
 
 	}
