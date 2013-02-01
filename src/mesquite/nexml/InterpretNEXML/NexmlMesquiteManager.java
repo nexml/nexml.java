@@ -111,12 +111,12 @@ public class NexmlMesquiteManager {
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
 		String handlerClassName = null;
 		String uriString = annotation.getPredicateNamespace().toString();
-			debug("looking for " + uriString);
+// 			debug("looking for " + uriString);
 		for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-			debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
+// 			debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
 			if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
 				handlerClassName = name;
-				debug ("found " + handlerClassName);
+// 				debug ("found " + handlerClassName);
 				break;
 			}
 		}
