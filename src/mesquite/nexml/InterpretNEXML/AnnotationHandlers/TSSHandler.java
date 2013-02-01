@@ -190,7 +190,7 @@ public class TSSHandler extends NamespaceHandler {
 			pvs = getClass(tssClass, value);
 			if (pvs != null) {
 				NexmlMesquiteManager.debug("found a corresponding rule, parsing " + value);
-				setValue(convert_to_mes(subj, pvs, value));
+				setValue(convertToMesAnnotation(subj, pvs, value));
 			} else {
 				// there is no TSS rule for this
 				setValue(Constants.NO_RULE);
@@ -217,7 +217,7 @@ public class TSSHandler extends NamespaceHandler {
 		return pvs;
 	}
 
-	private String convert_to_mes ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
+	private String convertToMesAnnotation ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
 		String formatted_pvs = new String();
 		for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
