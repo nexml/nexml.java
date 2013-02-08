@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Hashtable;
 
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
@@ -26,6 +27,8 @@ public class NexmlMesquiteManager {
 	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
 
+	private Hashtable mNamespaceHandlers;
+
 	private EmployerEmployee mEmployerEmployee;
 
 	/**
@@ -36,6 +39,7 @@ public class NexmlMesquiteManager {
 		mEmployerEmployee = employerEmployee;
 		mPredicateHandlerMapping = new Properties();
 		mNamespaceHandlerMapping = new Properties();
+		mNamespaceHandlers = new Hashtable();
 	    try {
 	    	mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
 	    	mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
@@ -111,30 +115,35 @@ public class NexmlMesquiteManager {
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
 		String handlerClassName = null;
 		String uriString = annotation.getPredicateNamespace().toString();
-// 			debug("looking for " + uriString);
-		for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-// 			debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
-			if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
-				handlerClassName = name;
-// 				debug ("found " + handlerClassName);
-				break;
+		NamespaceHandler nh = (NamespaceHandler) mNamespaceHandlers.get(uriString);
+		if (nh != null) {
+			debug ("blah " + uriString);
+		} else {
+			debug("looking for " + uriString);
+			for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
+				debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
+				if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
+					handlerClassName = name;
+					debug ("found " + handlerClassName);
+					break;
+				}
 			}
-		}
-		NamespaceHandler nh = null;
-		if ( handlerClassName != null ) {
-			try {
-				Class<?> handlerClass = Class.forName(handlerClassName);
-				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);
-			} catch (Exception e) {
-				e.printStackTrace();
+			if ( handlerClassName != null ) {
+				try {
+					Class<?> handlerClass = Class.forName(handlerClassName);
+					Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
+					nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);
+					mNamespaceHandlers.put(uriString, nh);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
-		}
-		if ( null == nh ) {
-			debug("no namespace handler");
-		}
-		else {
-			debug("using namespace handler "+nh.toString());
+			if ( null == nh ) {
+				debug("no namespace handler");
+			}
+			else {
+				debug("using namespace handler "+nh.toString());
+			}
 		}
 		return nh;
 	}
