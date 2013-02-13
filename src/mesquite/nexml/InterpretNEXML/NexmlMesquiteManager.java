@@ -117,11 +117,20 @@ public class NexmlMesquiteManager {
 		String uriString = annotation.getPredicateNamespace().toString();
 		NamespaceHandler nh = (NamespaceHandler) mNamespaceHandlers.get(uriString);
 		if (nh != null) {
-			debug ("blah " + uriString);
+			// don't reinstantiate all handlers all the time; if one has already been instantiated,
+			// just update the annotation for the existing handler
+// 			debug ("using " + nh.getClass().toString());
+			nh.setSubject(annotatable);
+			nh.setValue(annotation.getValue());
+			String property = annotation.getProperty();
+			if ( null == property || "".equals(property) ) {
+				property = annotation.getRel();
+				nh.setPropertyIsRel(true);
+			}
+			nh.setPredicate(property);
 		} else {
-			debug("looking for " + uriString);
+			debug("first time looking for " + uriString);
 			for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-				debug ("comparing to " + mNamespaceHandlerMapping.getProperty(name));
 				if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
 					handlerClassName = name;
 					debug ("found " + handlerClassName);
@@ -137,12 +146,6 @@ public class NexmlMesquiteManager {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
-			if ( null == nh ) {
-				debug("no namespace handler");
-			}
-			else {
-				debug("using namespace handler "+nh.toString());
 			}
 		}
 		return nh;
