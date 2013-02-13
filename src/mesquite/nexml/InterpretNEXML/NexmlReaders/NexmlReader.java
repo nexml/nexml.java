@@ -111,9 +111,9 @@ public class NexmlReader extends NexmlMesquiteManager {
 			Object subj = handler.getSubject();
 			Object pred = handler.getPredicate();
 
-			handler.read(mesAssociable, mesListable, segmentCount);
  			// Adding annotations for interpreting TSS commands:
-			debug("annotating " + segmentCount + " " + pred + " with value "+convertedValue);
+// 			debug("annotating " + segmentCount + " " + pred + " with value "+convertedValue);
+			handler.read(mesAssociable, mesListable, segmentCount);
  			if ( pred.toString().contains("tss:")) {
 				// if the TSSHandler handled this, getValue will now contain the mesquite-converted prop list
  				convertedValue = handler.getValue();
@@ -129,10 +129,16 @@ public class NexmlReader extends NexmlMesquiteManager {
 							String[] propParts = prop.split(":");
 							String convertedProp = propParts[0];
 							String convertedVal = propParts[1];
-							debug("setting the annotation as " + convertedProp + ":" + convertedVal);
+							debug("setting the annotation as " + convertedProp + "AND" + convertedVal);
 							NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
 							mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
-							mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
+							try {
+								Long val = new Long(convertedVal);
+								mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
+							} catch (Exception e) {
+								debug ("val wasn't a long");
+								mesAssociable.setAssociatedBit(mesNr,segmentCount,new Boolean("true"));
+							}
 						}
 					}
 				}

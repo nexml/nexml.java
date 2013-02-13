@@ -63,10 +63,8 @@ public class TSSHandler extends NamespaceHandler {
 			List<PropertyValue> pvs = r.getPropertyValues();
 			for (Selector s : selectors) {
 				mTSSHash.put(s.toString(), pvs);
-// 				NexmlMesquiteManager.debug("\tadding "+ s.toString() + " to the hash");
 			}
 		}
-// 		NexmlMesquiteManager.debug("\tthere are now "+ mTSSHash.size() + " elements in the hash");
 	}
 
 	/* (non-Javadoc)
@@ -185,11 +183,11 @@ public class TSSHandler extends NamespaceHandler {
 		Annotatable subj = getSubject();
 		String value = getValue().toString();
 		List<PropertyValue> pvs = null;
-
+		NexmlMesquiteManager.debug("looking for " + tssClass);
 		try {
 			pvs = getClass(tssClass, value);
 			if (pvs != null) {
-				NexmlMesquiteManager.debug("found a corresponding rule, parsing " + value);
+				NexmlMesquiteManager.debug("found rule " + tssClass + ", parsing " + value);
 				setValue(convertToMesAnnotation(subj, pvs, value));
 			} else {
 				// there is no TSS rule for this
@@ -209,10 +207,13 @@ public class TSSHandler extends NamespaceHandler {
 
 	private List<PropertyValue> getClass (String tssClassName, String tssValue) {
 // here we need to process the tssValue to see if it's a string or range, because those are special cases for selectors
-
+		NexmlMesquiteManager.debug("getting TSS class " + tssClassName + " with value " + tssValue);
 		List<PropertyValue> pvs = (List) mTSSHash.get(tssClassName + "." + tssValue);
 		if (pvs == null) {
 			pvs = (List) mTSSHash.get(tssClassName);
+		}
+		if (pvs != null) {
+			NexmlMesquiteManager.debug("returning " + pvs.size() + " pvs");
 		}
 		return pvs;
 	}
@@ -222,34 +223,45 @@ public class TSSHandler extends NamespaceHandler {
 		for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
-			NexmlMesquiteManager.debug("val is now " + val);
-			if (pv.getProperty().toString().equals("border")) {
-// 				in mesquite: annotate the node as <color = val >
-// 				String[] props = val.split("\\s+");
 
-				if (val.contains("red") || val.contains("#ff0000")) { val = "5"; }
-				else if (val.contains("green") || val.contains("#00ff00")) { val = "11"; }
-				else if (val.contains("yellow") || val.contains("#ffff00")) { val = "7"; }
-				else if (val.contains("blue") || val.contains("#0000ff")) { val = "14"; }
-				formatted_pvs = formatted_pvs + ";" + "color:" + val;
+			if (pv.getProperty().toString().equals("border")) {
+				String[] props = val.split("\\s+");
+				for (int i=0; i<props.length; i++) {
+					String color = convertToMesColor(props[i]);
+					if (color.equals("")) { // this is not a color word
+						if (props[i].contains("px")) {
+							// we want to set a width
+							formatted_pvs = formatted_pvs + ";" + "width:" + props[i].replace("px","");
+						}
+					} else { // this is a color word
+						formatted_pvs = formatted_pvs + ";" + "color:" + color;
+					}
+				}
 			}
 			else if (pv.getProperty().toString().equals("color")) {
-// 					<color = val >
-				if (val.equals("red") || val.equals("#ff0000")) { val = "5"; }
-				else if (val.equals("green") || val.equals("#00ff00")) { val = "11"; }
-				else if (val.equals("yellow") || val.equals("#ffff00")) { val = "7"; }
-				else if (val.equals("blue") || val.equals("#0000ff")) { val = "14"; }
-				formatted_pvs = formatted_pvs + ";" + (pv.getProperty() + ":" + val);
-				NexmlMesquiteManager.debug("applying the format " +  pv.getProperty() + ":" + val + " to " + subj);
+// 					<color = val > this is actually wrong: converts branch color when it should convert text color
+				formatted_pvs = formatted_pvs + ";" + (pv.getProperty() + ":" + convertToMesColor(val));
 			}
-// 			else if (pv.getProperty().toString().equals("collapsed")) {
-// // 	//  			<triangled = on >
-// 				if (val.equals("true")) { val = "on"; }
-// 				formatted_pvs = formatted_pvs + ";" + (pv.getProperty() + ":" + val);
-// 				NexmlMesquiteManager.debug("applying the format " +  pv.getProperty() + ":" + val + " to " + subj);
-// 			}
+			else if (pv.getProperty().toString().equals("collapsed")) {
+// 	//  			<triangled = on >
+				if (val.equals("true")) {
+					formatted_pvs = formatted_pvs + ";" + "triangled:on";
+				}
+				NexmlMesquiteManager.debug("applying the format " +  "triangled : on" + " to " + subj);
+			}
 		}
+		NexmlMesquiteManager.debug("converted to Mes annotation " + formatted_pvs);
 		return formatted_pvs;
+	}
+
+	private String convertToMesColor ( String val ) {
+		String mesColor = "";
+		if (val.equals("red") || val.equals("#ff0000")) { mesColor = "5"; }
+		else if (val.equals("green") || val.equals("#00ff00")) { mesColor = "11"; }
+		else if (val.equals("yellow") || val.equals("#ffff00")) { mesColor = "7"; }
+		else if (val.equals("blue") || val.equals("#0000ff")) { mesColor = "14"; }
+
+		return mesColor;
 	}
 
 }
