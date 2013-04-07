@@ -1,15 +1,13 @@
-/**
- *
- */
+
 package mesquite.nexml.InterpretNEXML.AnnotationHandlers;
 
-import java.lang.reflect.Method;
 import java.io.*;
 import java.util.*;
 
 
 import mesquite.lib.Associable;
 import mesquite.lib.Listable;
+import mesquite.lib.ColorDistribution;
 import mesquite.nexml.InterpretNEXML.Constants;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 
@@ -27,19 +25,13 @@ public class TSSHandler extends NamespaceHandler {
 	private Annotatable mSubject;
 	private Object mValue;
 	private String mPredicate;
-	private File mTSSFile;
 	private List<Rule> mTSSList;
 	private Hashtable mTSSHash;
 
 
-	/**
-	 * @param subject
-	 * @param predicate
-	 * @param object
-	 */
 	public TSSHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
-		mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+        File mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
 		Scanner scanner = null;
 		String cssString = "";
 		try {
@@ -219,16 +211,16 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
 	private String convertToMesAnnotation ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
-		String formatted_pvs = new String();
+		String formatted_pvs = "";
 		for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
 
-			if (pv.getProperty().toString().equals("border")) {
+			if (pv.getProperty().equals("border")) {
 				String[] props = val.split("\\s+");
 				for (int i=0; i<props.length; i++) {
 					String color = convertToMesColor(props[i]);
-					if (color.equals("")) { // this is not a color word
+					if (color == null) { // this is not a color word
 						if (props[i].contains("px")) {
 							// we want to set a width
 							formatted_pvs = formatted_pvs + ";" + "width:" + props[i].replace("px","");
@@ -238,11 +230,11 @@ public class TSSHandler extends NamespaceHandler {
 					}
 				}
 			}
-			else if (pv.getProperty().toString().equals("color")) {
+			else if (pv.getProperty().equals("color")) {
 // 					<color = val > this is actually wrong: converts branch color when it should convert text color
 				formatted_pvs = formatted_pvs + ";" + (pv.getProperty() + ":" + convertToMesColor(val));
 			}
-			else if (pv.getProperty().toString().equals("collapsed")) {
+			else if (pv.getProperty().equals("collapsed")) {
 // 	//  			<triangled = on >
 				if (val.equals("true")) {
 					formatted_pvs = formatted_pvs + ";" + "triangled:on";
@@ -255,12 +247,15 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
 	private String convertToMesColor ( String val ) {
-		String mesColor = "";
-		if (val.equals("red") || val.equals("#ff0000")) { mesColor = "5"; }
-		else if (val.equals("green") || val.equals("#00ff00")) { mesColor = "11"; }
-		else if (val.equals("yellow") || val.equals("#ffff00")) { mesColor = "7"; }
-		else if (val.equals("blue") || val.equals("#0000ff")) { mesColor = "14"; }
+		String mesColor = null;
 
+        for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
+            String thisColor = ColorDistribution.standardColorNames.getValue(i).toLowerCase();
+            NexmlMesquiteManager.debug("val is "+val+", color option "+thisColor);
+            if(val.equals(thisColor)) {
+                mesColor = String.valueOf(i);
+            }
+        }
 		return mesColor;
 	}
 
