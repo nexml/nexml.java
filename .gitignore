@@ -4,3 +4,5 @@
 .settings
 bin
 .idea/
+
+.idea/workspace.xml
