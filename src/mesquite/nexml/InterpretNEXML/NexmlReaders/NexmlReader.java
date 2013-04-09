@@ -10,6 +10,7 @@ import mesquite.lib.Listable;
 import mesquite.lib.MesquiteFile;
 import mesquite.lib.MesquiteProject;
 import mesquite.lib.NameReference;
+import mesquite.nexml.InterpretNEXML.AnnotationHandlers.TSSHandler;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
@@ -72,6 +73,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
+
 		return mesProject;
 	}
 
@@ -94,14 +96,23 @@ public class NexmlReader extends NexmlMesquiteManager {
 		}
 	}
 
-	/**
+    private static String mesquiteScriptBlock;
+    public String getMesquiteScriptBlock () {
+        return mesquiteScriptBlock;
+    }
+
+    public void setMesquiteScriptBlock (String newblock) {
+        mesquiteScriptBlock = newblock;
+    }
+
+    /**
 	 *
 	 * @param mesAssociable
 	 * @param xmlAnnotatable
 	 * @param segmentCount
 	 * @param mesListable
 	 */
-	protected void readAnnotations(Associable mesAssociable,Annotatable xmlAnnotatable,int segmentCount,Listable mesListable) {
+	protected void readAnnotations(Associable mesAssociable, Annotatable xmlAnnotatable,int segmentCount,Listable mesListable) {
 		for ( Annotation xmlAnnotation : xmlAnnotatable.getAllAnnotations() ) {
 			PredicateHandler handler = getNamespaceHandler(xmlAnnotatable,xmlAnnotation);
 			if ( null == handler ) {
@@ -115,6 +126,8 @@ public class NexmlReader extends NexmlMesquiteManager {
 // 			debug("annotating " + segmentCount + " " + pred + " with value "+convertedValue);
 			handler.read(mesAssociable, mesListable, segmentCount);
  			if ( pred.toString().contains("tss:")) {
+                 TSSHandler tsshandler = (TSSHandler) handler;
+                 setMesquiteScriptBlock(tsshandler.getMesquiteScriptBlock());
 				// if the TSSHandler handled this, getValue will now contain the mesquite-converted prop list
  				convertedValue = handler.getValue();
  				if (convertedValue.equals(Constants.NO_RULE)) {
@@ -122,21 +135,21 @@ public class NexmlReader extends NexmlMesquiteManager {
 					// no rule specified
  				}
  				else if (convertedValue != null) {
-					debug("tss formatstring should now be "+ convertedValue);
+//					debug("tss formatstring should now be "+ convertedValue);
 					String[] mesProps = convertedValue.toString().split(";");
 					for (String prop : mesProps) {
 						if (!prop.equals("")) {
 							String[] propParts = prop.split(":");
 							String convertedProp = propParts[0];
 							String convertedVal = propParts[1];
-							debug("setting the annotation as " + convertedProp + "AND" + convertedVal);
+//							debug("setting the annotation as " + convertedProp + "AND" + convertedVal);
 							NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
 							mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
 							try {
 								Long val = new Long(convertedVal);
 								mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
 							} catch (Exception e) {
-								debug ("val wasn't a long");
+//								debug ("val wasn't a long");
 								mesAssociable.setAssociatedBit(mesNr,segmentCount,new Boolean("true"));
 							}
 						}
@@ -144,8 +157,6 @@ public class NexmlReader extends NexmlMesquiteManager {
 				}
  			}
 			else if ( convertedValue instanceof Boolean ) {
-//
-//  			if ( convertedValue instanceof Boolean ) {
 				NameReference mesNr = mesAssociable.makeAssociatedBits(handler.getPredicate());
 				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
 				mesAssociable.setAssociatedBit(mesNr,segmentCount,(Boolean)convertedValue);

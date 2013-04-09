@@ -14,8 +14,9 @@ import org.nexml.model.Document;
 import org.nexml.model.DocumentFactory;
 
 public class InterpretNEXML extends FileInterpreterI {
+    private String mesquiteScriptBlock;
 
-	/*.................................................................................................................*/
+    /*.................................................................................................................*/
 	public boolean startJob(String arguments, Object condition, boolean hiredByName) {
  		return true;  //make this depend on taxa reader being found?)
 	}
@@ -57,6 +58,7 @@ public class InterpretNEXML extends FileInterpreterI {
 		NexmlReader nr = new NexmlReader(this);
 		try {
 			nr.fillProjectFromNexml(xmlDocument,project);
+            mesquiteScriptBlock = nr.getMesquiteScriptBlock();
 	    } catch ( Exception e) {
 	    	e.printStackTrace();
 	    }

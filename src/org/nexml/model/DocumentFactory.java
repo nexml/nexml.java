@@ -115,7 +115,6 @@ public class DocumentFactory {
 	 */
 	static public Document parse(File file) throws SAXException, IOException,
 			ParserConfigurationException {
-				mesquite.lib.MesquiteMessage.notifyProgrammer("argle");
 		return createDocument(getDocumentBuilder().parse(file));
 	}
 
