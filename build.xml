@@ -23,7 +23,7 @@
 	<!-- CORE LIBRARY -->
 	<target name="compile" depends="clean">
 		<mkdir dir="${classfiles}"/>
-	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5">
+	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
 	        <exclude name="**/mesquite/nexml/InterpretNEXML/**"/>
 	    	<exclude name="**/validator/**"/>
 	    	<exclude name="**/transformer/**"/>
@@ -81,7 +81,7 @@
 		<mkdir dir="${classfiles}"/>
     	<unzip src="${lib}/${osbcpcssjar}" dest="${classfiles}"/>
 		<echo message="Using MESQUITE_ROOT=${toString:classpath-mesquite}"/>
-		<javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5">
+		<javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
 			<exclude name="**/validator/*"/>
 			<exclude name="**/transformer/*"/>
 			<classpath refid="classpath-mesquite"/>
