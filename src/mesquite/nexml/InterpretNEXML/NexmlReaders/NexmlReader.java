@@ -2,7 +2,6 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import mesquite.lib.Associable;
 import mesquite.lib.Attachable;
 import mesquite.lib.EmployerEmployee;
@@ -22,6 +21,8 @@ import org.nexml.model.Document;
 import org.nexml.model.Matrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
+
+import com.osbcp.cssparser.PropertyValue;
 
 public class NexmlReader extends NexmlMesquiteManager {
 
@@ -96,13 +97,10 @@ public class NexmlReader extends NexmlMesquiteManager {
 		}
 	}
 
-    private static String mesquiteScriptBlock;
-    public String getMesquiteScriptBlock () {
-        return mesquiteScriptBlock;
-    }
+    private static List<PropertyValue> treeProperties;
 
-    public void setMesquiteScriptBlock (String newblock) {
-        mesquiteScriptBlock = newblock;
+    public List<PropertyValue> getTreeProperties () {
+        return treeProperties;
     }
 
     /**
@@ -127,7 +125,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 			handler.read(mesAssociable, mesListable, segmentCount);
  			if ( pred.toString().contains("tss:")) {
                  TSSHandler tsshandler = (TSSHandler) handler;
-                 setMesquiteScriptBlock(tsshandler.getMesquiteScriptBlock());
+                 treeProperties = tsshandler.getmTreeProperties();
 				// if the TSSHandler handled this, getValue will now contain the mesquite-converted prop list
  				convertedValue = handler.getValue();
  				if (convertedValue.equals(Constants.NO_RULE)) {
