@@ -10,6 +10,7 @@ import mesquite.lib.Listable;
 import mesquite.lib.ColorDistribution;
 import mesquite.nexml.InterpretNEXML.Constants;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
+import mesquite.nexml.InterpretNEXML.InterpretNEXML;
 
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
@@ -27,7 +28,7 @@ public class TSSHandler extends NamespaceHandler {
 	private String mPredicate;
 	private List<Rule> mTSSList;
 	private Hashtable mTSSHash;
-    private String mesquiteScriptBlock;
+    private Vector<PropertyValue> mTreeProperties;
 
 	public TSSHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
@@ -57,7 +58,7 @@ public class TSSHandler extends NamespaceHandler {
 				mTSSHash.put(s.toString(), pvs);
 			}
 		}
-        mesquiteScriptBlock = "Begin MESQUITE;\nMESQUITESCRIPTVERSION 2;\nTITLE AUTO;\n[@@@]\nend;";
+        mTreeProperties = new Vector<PropertyValue>();
         parseGeneralSelectors();
 	}
 
@@ -175,7 +176,7 @@ public class TSSHandler extends NamespaceHandler {
         if (pvs != null) {
             mesquiteWindowAnnotation ( pvs );
         }
-        return mesquiteScriptBlock;
+        return "";
     }
 // This parses the actual xml meta tag for TSS
 // index is the Mesquite node ID
@@ -230,15 +231,15 @@ public class TSSHandler extends NamespaceHandler {
             if (pv.getProperty().equals("background")) {
                 String[] props = val.split("\\s+");
                 for (int i=0; i<props.length; i++) {
-                    String color = convertToMesColor(props[i]);
+                    String color = InterpretNEXML.convertToMesColorNumber(props[i]);
                     if (color != null) { // this is a color word
                         color = ColorDistribution.getStandardColorName(Integer.parseInt(color));
                         formatted_pvs = formatted_pvs + "\nsetBackground " + color +";";
                     }
                 }
             }
+            mTreeProperties.add(pv);
         }
-        addScriptBlock(formatted_pvs);
     }
 
 
@@ -251,7 +252,7 @@ public class TSSHandler extends NamespaceHandler {
 			if (pv.getProperty().equals("border")) {
 				String[] props = val.split("\\s+");
 				for (int i=0; i<props.length; i++) {
-					String color = convertToMesColor(props[i]);
+					String color = InterpretNEXML.convertToMesColorNumber(props[i]);
 					if (color == null) { // this is not a color word
 						if (props[i].contains("px")) {
 							// we want to set a width
@@ -263,7 +264,7 @@ public class TSSHandler extends NamespaceHandler {
 				}
 			}
 			else if (pv.getProperty().equals("color")) {
-				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColor(val));
+				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + InterpretNEXML.convertToMesColorNumber(val));
 			}
 			else if (pv.getProperty().equals("collapsed")) {
 // 	//  			<triangled = on >
@@ -276,23 +277,9 @@ public class TSSHandler extends NamespaceHandler {
 		return formatted_pvs;
 	}
 
-	private String convertToMesColor ( String val ) {
-		String mesColor = null;
-
-        for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
-            String thisColor = ColorDistribution.standardColorNames.getValue(i).toLowerCase();
-            if(val.equals(thisColor)) {
-                mesColor = String.valueOf(i);
-            }
-        }
-		return mesColor;
-	}
-
-    private void addScriptBlock (String block) {
-        mesquiteScriptBlock = mesquiteScriptBlock.replaceFirst("\\[@@@\\]",block+"\n[@@@]");
-    }
-    public String getMesquiteScriptBlock () {
-        return mesquiteScriptBlock;
+    public Vector<PropertyValue> getmTreeProperties () {
+        NexmlMesquiteManager.debug("we have "+mTreeProperties.size()+ " tree properties");
+        return mTreeProperties;
     }
 }
 
