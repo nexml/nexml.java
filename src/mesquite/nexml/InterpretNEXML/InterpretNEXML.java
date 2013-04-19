@@ -11,7 +11,6 @@ import com.osbcp.cssparser.PropertyValue;
 import mesquite.lib.*;
 import mesquite.lib.duties.DrawTree;
 import mesquite.lib.duties.FileInterpreterI;
-import mesquite.lib.ColorDistribution;
 import mesquite.minimal.BasicFileCoordinator.BasicFileCoordinator;
 import mesquite.nexml.InterpretNEXML.NexmlReaders.NexmlReader;
 import mesquite.nexml.InterpretNEXML.NexmlWriters.NexmlWriter;
@@ -68,14 +67,14 @@ public class InterpretNEXML extends FileInterpreterI {
 			e.printStackTrace();
 		}
 		NexmlReader nr = new NexmlReader(this);
-		try {
+        try {
 			nr.fillProjectFromNexml(xmlDocument,project);
             treeProperties = nr.getTreeProperties();
             canvasProperties = nr.getCanvasProperties();
+            sendMesquiteCommands(project);
         } catch ( Exception e) {
 	    	e.printStackTrace();
 	    }
-        sendMesquiteCommands(project);
     }
 
 /* ============================  exporting ============================*/
@@ -126,6 +125,8 @@ public class InterpretNEXML extends FileInterpreterI {
         Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
         BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
         BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.WeightedSquareTree.WeightedSquareTree", cc);
+        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
 
         int width = dim.width;
         int height = dim.height;
@@ -159,51 +160,50 @@ public class InterpretNEXML extends FileInterpreterI {
         taxonNames.doCommand("setFontSize",fontSize,cc);
         taxonNames.doCommand("setFont",fontFamily,cc);
 
-        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.WeightedSquareTree.WeightedSquareTree", cc);
-        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
+
+        String borderWidth = "3";
+        String borderColor = "0";
+        String layout = "rectangular";
+        String tipOrientation = "RIGHT";
+        boolean scaled = false;
+
+        /*
+          border-width: 1px;
+          border-color: black;
+          border-style: solid;
+          layout: rectangular | triangular | radial | polar
+          tip-orientation: left | right | top | bottom
+          scaled: true | false;
+        */
         for (int i=0;i<treeProperties.size();i++) {
             PropertyValue pv = treeProperties.get(i);
             mesquite.lib.MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
-            if (pv.getProperty().equalsIgnoreCase("background-color")) {
-                //set the color to the standard color
-                backgroundColor = pv.getValue();
-            } else if (pv.getProperty().equalsIgnoreCase("width")) {
-                width = Integer.parseInt(pv.getValue());
-            } else if (pv.getProperty().equalsIgnoreCase("height")) {
-                height = Integer.parseInt(pv.getValue());
+            if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                borderWidth = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                borderColor = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                tipOrientation = pv.getValue();
             } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
                 fontFamily = pv.getValue();
             } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
                 fontSize = pv.getValue();
             }
         }
+        treeDrawer.doCommand("setStemWidth", borderWidth, cc);
+        treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
+        treeDrawer.doCommand("setBranchColor", borderColor, cc);
+
+        if (tipOrientation.equalsIgnoreCase("up")) {
+            treeDrawer.doCommand("orientUP","",cc);
+        } else if (tipOrientation.equalsIgnoreCase("left")) {
+            treeDrawer.doCommand("orientLEFT","",cc);
+        } else if (tipOrientation.equalsIgnoreCase("right")) {
+            treeDrawer.doCommand("orientRIGHT","",cc);
+        } else if (tipOrientation.equalsIgnoreCase("down")) {
+            treeDrawer.doCommand("orientDOWN","",cc);
+        }
 
         treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
     }
-
-    public static String convertToMesColorNumber ( String val ) {
-        String mesColor = null;
-
-        for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
-            String thisColor = ColorDistribution.standardColorNames.getValue(i).toLowerCase();
-            if(val.equals(thisColor)) {
-                mesColor = String.valueOf(i);
-            }
-        }
-        return mesColor;
-    }
-
-    public static String convertToMesColorName ( String val ) {
-        String mesColor = ColorDistribution.standardColorNames.getValue(4 /*white*/);
-
-        for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
-            String thisColor = ColorDistribution.standardColorNames.getValue(i).toLowerCase();
-            if(val.equals(thisColor)) {
-                mesColor = ColorDistribution.standardColorNames.getValue(i);
-            }
-        }
-        return mesColor;
-    }
-
-
 }

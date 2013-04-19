@@ -8,8 +8,8 @@ import java.util.List;
 
 
 import mesquite.lib.Associable;
-import mesquite.lib.Listable;
 import mesquite.lib.ColorDistribution;
+import mesquite.lib.Listable;
 import mesquite.nexml.InterpretNEXML.Constants;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.InterpretNEXML;
@@ -174,80 +174,60 @@ public class TSSHandler extends NamespaceHandler {
 
 
     // parses the general selectors "canvas," "tree," and "scale"
-    public void parseGeneralSelectors (){
-        // set defaults
-        String backgroundColor = "White";
-        String fontFamily = "sans-serif";
-        String fontSize = "12";
-        String fontStyle = "normal";
-
+    public void parseGeneralSelectors () {
         List<PropertyValue> pvs = getClass ("canvas", "");
         if (pvs != null) {
-            int j = 0;
-            while (j<pvs.size()) {
-                PropertyValue pv = pvs.get(j++);
+            for (PropertyValue pv : pvs) {
                 NexmlMesquiteManager.debug("parsing canvas pv "+pv.getProperty());
-                // for each pv, if it is a compound value, break it into simple pvs and add them individually
-                if (pv.getProperty().equalsIgnoreCase("font")) {
-                    //font-style font-size font-family
-                    String[] split_pvs = pv.getValue().split(" ",2);
-                    if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
-                        pvs.add(new PropertyValue("font-style",split_pvs[0]));
-                        split_pvs = split_pvs[1].split(" ",2);
-                    }
-                    pvs.add(new PropertyValue("font-size",split_pvs[0]));
-                    pvs.add(new PropertyValue("font-family",split_pvs[1]));
-                } else if (pv.getProperty().contains("background")) {
+                if (pv.getProperty().equalsIgnoreCase("background-color")) {
                     //Mesquite can only handle setting the color of the canvas. Ignore everything else.
                     //set the color to a standard color
-                    backgroundColor = InterpretNEXML.convertToMesColorName(pv.getValue());
+                    mCanvasProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
                 } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    String[] vals = pv.getValue().split(",");
-                    for(int i=0;i<vals.length;i++) {
-                        String value = vals[i].trim().replaceAll("\"","");
-                        Font f = new Font(value,Font.PLAIN,12); // these are arbitrary values; we just want to see if value is a valid font name
-                        if (f.getFamily().equalsIgnoreCase("Dialog")) {
-                            continue;
-                        }
-                        fontFamily = value;
-                        break;
-                    }
+                    String fontFamily = chooseAFont(pv.getValue());
+                    mCanvasProperties.add(new PropertyValue("font-family",fontFamily));
                 } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
                     //convert this value to a point number
-                    String unit = pv.getValue().replaceAll("\\d","");
-                    int value = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
-                    if (unit.contains("%")) {
-                        // assume percentage is based on a default size of 12pt
-                        value = 12 * (value/100);
-                    } else if (unit.contains("in")) {
-                        // assume 72 pt per inch
-                        value = value * 72;
-                    } else if (unit.contains("cm")) {
-                        // assume 28.3 pt per cm
-                        value = (int) (value * 28.3);
-                    }
-                    fontSize = String.valueOf(value);
-                } else if ((pv.getProperty().equalsIgnoreCase("width")) || (pv.getProperty().equalsIgnoreCase("height"))) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
+                    mCanvasProperties.add(new PropertyValue("font-size",String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("height")) {
                     //convert this value to a single pixel number
-                    String unit = pv.getValue().replaceAll("\\d","");
-                    int value = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
-                    if (unit.contains("%")) {
-                        // assume percentage is based on a window of 800x800px
-                        value = 800 * (value/100);
-                    } else if (unit.contains("in")) {
-                        // assume 72 px per inch
-                        value = value * 72;
-                    } else if (unit.contains("cm")) {
-                        // assume 28.3 px per cm
-                        value = (int) (value * 28.3);
-                    }
-                    mCanvasProperties.add(new PropertyValue(pv.getProperty(),String.valueOf(value)));
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_HEIGHT);
+                    mCanvasProperties.add(new PropertyValue("height",String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("width")) {
+                    //convert this value to a single pixel number
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_WIDTH);
+                    mCanvasProperties.add(new PropertyValue("width",String.valueOf(value)));
                 }
             }
         }
-        mCanvasProperties.add(new PropertyValue("font-family",fontFamily));
-        mCanvasProperties.add(new PropertyValue("font-size",fontSize));
-        mCanvasProperties.add(new PropertyValue("background-color",backgroundColor));
+
+        pvs = getClass ("tree", "");
+        if (pvs != null) {
+            for (PropertyValue pv : pvs) {
+                NexmlMesquiteManager.debug("parsing tree pv "+pv.getProperty()+" with value "+pv.getValue());
+                /*
+                  border-width: 1px;
+                  border-color: black;
+                  border-style: solid;
+                  layout: rectangular | triangular | radial | polar
+                  tip-orientation: left | right | top | bottom
+                  scaled: true | false;
+                */
+                if (pv.getProperty().equalsIgnoreCase("layout")) {
+                    mTreeProperties.add(new PropertyValue("layout", "rectangular"));
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
+                    mTreeProperties.add(new PropertyValue("border-width",String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    mTreeProperties.add(new PropertyValue("border-color",convertToMesColorNumber(pv.getValue())));
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                    mTreeProperties.add(new PropertyValue("tip-orientation",pv.getValue().toUpperCase()));
+                }
+            }
+        }
     }
 // This parses the actual xml meta tag for TSS
 // index is the Mesquite node ID
@@ -259,7 +239,7 @@ public class TSSHandler extends NamespaceHandler {
 		Annotatable subj = getSubject();
 		String value = getValue().toString();
 		List<PropertyValue> pvs = null;
-		NexmlMesquiteManager.debug("looking for " + tssClass);
+//		NexmlMesquiteManager.debug("looking for " + tssClass);
 		try {
 			pvs = getClass(tssClass, value);
 			if (pvs != null) {
@@ -288,10 +268,54 @@ public class TSSHandler extends NamespaceHandler {
 		if (pvs == null) {
 			pvs = (List) mTSSHash.get(tssClassName);
 		}
-		if (pvs != null) {
-			NexmlMesquiteManager.debug("returning " + pvs.size() + " pvs");
-		}
-		return pvs;
+        Vector<PropertyValue> new_pvs = new Vector<PropertyValue>();
+        // process the compound properties into single properties.
+        for (PropertyValue pv : pvs) {
+            if (pv.getProperty().equalsIgnoreCase("font")) {
+                //three components:
+                //font-style font-size font-family
+                //font-style is optional, but other two are required
+                String fontStyle = "normal";
+                String fontSize = String.valueOf(Constants.DEFAULT_FONT_SIZE);
+                String fontFamily = "serif";
+                String[] split_pvs = pv.getValue().split(" ",2);
+                if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
+                    fontStyle = split_pvs[0];
+                    split_pvs = split_pvs[1].split(" ",2);
+                }
+                if (split_pvs.length==2) {
+                    fontSize = split_pvs[0];
+                    fontFamily = split_pvs[1];
+                }
+                new_pvs.add(new PropertyValue("font-style",fontStyle));
+                new_pvs.add(new PropertyValue("font-size",fontSize));
+                new_pvs.add(new PropertyValue("font-family",fontFamily));
+            } else if (pv.getProperty().equalsIgnoreCase("background")) {
+                // this isn't compound now, but it could be later, as per the CSS spec
+                new_pvs.add(new PropertyValue("background-color",pv.getValue()));
+            } else if (pv.getProperty().equalsIgnoreCase("border")) {
+                // three components:
+                // border-width border-color border-style
+                // all are optional
+                String[] split_pvs = pv.getValue().split(" ");
+                for (String split_pv : split_pvs) {
+                    int value = convertToPixels(split_pv,Constants.DEFAULT_BORDER_WIDTH);
+                    if (value > 0) {
+                        new_pvs.add(new PropertyValue("border-width",String.valueOf(value)));
+                        continue;
+                    }
+                    String col = convertToMesColorName(split_pv);
+                    if (col != null) {
+                        new_pvs.add(new PropertyValue("border-color",col));
+                        continue;
+                    }
+                }
+            } else if (pv.getProperty().equalsIgnoreCase("")) {
+            } else {
+                new_pvs.add(pv);
+            }
+        }
+        return new_pvs;
 	}
 
     private String mesquiteNodeAnnotation ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
@@ -300,10 +324,10 @@ public class TSSHandler extends NamespaceHandler {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
 
-			if (pv.getProperty().equals("border")) {
+			if (pv.getProperty().equals("border-width")) {
 				String[] props = val.split("\\s+");
 				for (int i=0; i<props.length; i++) {
-					String color = InterpretNEXML.convertToMesColorNumber(props[i]);
+					String color = convertToMesColorNumber(props[i]);
 					if (color == null) { // this is not a color word
 						if (props[i].contains("px")) {
 							// we want to set a width
@@ -315,7 +339,7 @@ public class TSSHandler extends NamespaceHandler {
 				}
 			}
 			else if (pv.getProperty().equals("color")) {
-				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + InterpretNEXML.convertToMesColorNumber(val));
+				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
 			}
 			else if (pv.getProperty().equals("collapsed")) {
 // 	//  			<triangled = on >
@@ -334,5 +358,66 @@ public class TSSHandler extends NamespaceHandler {
     public Vector<PropertyValue> getmCanvasProperties () {
         return mCanvasProperties;
     }
+
+    private int convertToPixels (String stringValue, int defaultValue) {
+        //convert this value to a point number
+        int value = 0;
+        String unit = stringValue.replaceAll("\\d","");
+        try {
+            value = Integer.parseInt(stringValue.replaceAll("\\D",""));
+        } catch (Exception e) {
+            return 0;
+        }
+        if (unit.contains("%")) {
+            value = (int) ((double) defaultValue * (value/100));
+        } else if (unit.contains("in")) {
+            // assume 72 pt per inch
+            value = value * 72;
+        } else if (unit.contains("cm")) {
+            // assume 28.3 pt per cm
+            value = (int) (value * 28.3);
+        }
+        return value;
+    }
+
+    private String chooseAFont (String fontString) {
+        String fontFamily = Constants.DEFAULT_FONT;
+        String[] vals = fontString.split(",");
+        for(int i=0;i<vals.length;i++) {
+            String value = vals[i].trim().replaceAll("\"","");
+            Font f = new Font(value,Font.PLAIN,12); // these are arbitrary values; we just want to see if value is a valid font name
+            if (f.getFamily().equalsIgnoreCase("Dialog")) {
+                continue;
+            }
+            fontFamily = value;
+            break;
+        }
+        return fontFamily;
+    }
+    private String convertToMesColorNumber ( String val ) {
+        String mesColor = null;
+
+        for (int i=0;i< ColorDistribution.standardColorNames.getSize();i++) {
+            String thisColor = ColorDistribution.standardColorNames.getValue(i);
+            if(val.equalsIgnoreCase(thisColor)) {
+                mesColor = String.valueOf(i);
+            }
+        }
+        return mesColor;
+    }
+
+    private String convertToMesColorName ( String val ) {
+        String mesColor = null;
+
+        for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
+            String thisColor = ColorDistribution.standardColorNames.getValue(i);
+            if(val.equalsIgnoreCase(thisColor)) {
+                mesColor = ColorDistribution.standardColorNames.getValue(i);
+            }
+        }
+        return mesColor;
+    }
+
+
 }
 
