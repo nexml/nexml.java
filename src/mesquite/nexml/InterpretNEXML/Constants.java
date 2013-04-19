@@ -30,5 +30,5 @@ public class Constants {
     public static final int DEFAULT_CANVAS_HEIGHT = 800;
     public static final int DEFAULT_FONT_SIZE = 10;
     public static final int DEFAULT_BORDER_WIDTH = 2;
-    public static final String DEFAULT_FONT = "Helvetica";
+    public static final String DEFAULT_FONT_FAMILY = "Helvetica";
 }

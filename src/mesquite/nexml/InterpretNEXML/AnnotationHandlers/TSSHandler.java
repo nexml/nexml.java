@@ -244,7 +244,7 @@ public class TSSHandler extends NamespaceHandler {
 			pvs = getClass(tssClass, value);
 			if (pvs != null) {
 				NexmlMesquiteManager.debug("found rule " + tssClass + ", parsing " + value);
-				setValue(mesquiteNodeAnnotation(subj, pvs, value));
+				setValue(mesquiteNodeAnnotation(pvs, value));
 			} else {
 				// there is no TSS rule for this
 				setValue(Constants.NO_RULE);
@@ -277,16 +277,24 @@ public class TSSHandler extends NamespaceHandler {
                 //font-style is optional, but other two are required
                 String fontStyle = "normal";
                 String fontSize = String.valueOf(Constants.DEFAULT_FONT_SIZE);
-                String fontFamily = "serif";
+                String fontFamily;
                 String[] split_pvs = pv.getValue().split(" ",2);
+                if (split_pvs.length != 2) {
+                    // something bad happened here, don't add these font properties
+                    NexmlMesquiteManager.debug("poorly formed font property, should have [font-style] font-size font-family: "+pv.getValue());
+                    continue;
+                }
                 if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
                     fontStyle = split_pvs[0];
                     split_pvs = split_pvs[1].split(" ",2);
                 }
-                if (split_pvs.length==2) {
-                    fontSize = split_pvs[0];
-                    fontFamily = split_pvs[1];
+                if (split_pvs.length != 2) {
+                    // something bad happened here, don't add these font properties
+                    NexmlMesquiteManager.debug("poorly formed font property, should have [font-style] font-size font-family: "+pv.getValue());
+                    continue;
                 }
+                fontSize = split_pvs[0];
+                fontFamily = chooseAFont(split_pvs[1]);
                 new_pvs.add(new PropertyValue("font-style",fontStyle));
                 new_pvs.add(new PropertyValue("font-size",fontSize));
                 new_pvs.add(new PropertyValue("font-family",fontFamily));
@@ -296,7 +304,7 @@ public class TSSHandler extends NamespaceHandler {
             } else if (pv.getProperty().equalsIgnoreCase("border")) {
                 // three components:
                 // border-width border-color border-style
-                // all are optional
+                // all are optional (but border-style is not implemented in Mesquite)
                 String[] split_pvs = pv.getValue().split(" ");
                 for (String split_pv : split_pvs) {
                     int value = convertToPixels(split_pv,Constants.DEFAULT_BORDER_WIDTH);
@@ -318,37 +326,28 @@ public class TSSHandler extends NamespaceHandler {
         return new_pvs;
 	}
 
-    private String mesquiteNodeAnnotation ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
+    private String mesquiteNodeAnnotation (List<PropertyValue> pvs, String tssValue ) {
 		String formatted_pvs = "";
 		for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
-
-			if (pv.getProperty().equals("border-width")) {
-				String[] props = val.split("\\s+");
-				for (int i=0; i<props.length; i++) {
-					String color = convertToMesColorNumber(props[i]);
-					if (color == null) { // this is not a color word
-						if (props[i].contains("px")) {
-							// we want to set a width
-							formatted_pvs = formatted_pvs + ";" + "width:" + props[i].replace("px","");
-						}
-					} else { // this is a color word
-						formatted_pvs = formatted_pvs + ";" + "color:" + color;
-					}
-				}
-			}
-			else if (pv.getProperty().equals("color")) {
+            if (pv.getProperty().equals("border-color")) {
+                formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(pv.getValue());
+			} else if (pv.getProperty().equals("border-width")) {
+                formatted_pvs = formatted_pvs + ";" + "width:" + pv.getValue();
+            } else if (pv.getProperty().equals("color")) {
 				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
-			}
-			else if (pv.getProperty().equals("collapsed")) {
-// 	//  			<triangled = on >
-				if (val.equals("true")) {
+			} else if (pv.getProperty().equals("collapsed")) {
+	//  			<triangled = on >
+				if (Boolean.getBoolean(val)) {
 					formatted_pvs = formatted_pvs + ";" + "triangled:on";
 				}
 			}
 		}
-		NexmlMesquiteManager.debug("converted to Mes annotation " + formatted_pvs);
+        if (formatted_pvs.startsWith(";")) {
+            formatted_pvs = formatted_pvs.substring(1);
+        }
+		NexmlMesquiteManager.debug("converted to Mesquite annotation " + formatted_pvs);
 		return formatted_pvs;
 	}
 
@@ -381,7 +380,7 @@ public class TSSHandler extends NamespaceHandler {
     }
 
     private String chooseAFont (String fontString) {
-        String fontFamily = Constants.DEFAULT_FONT;
+        String fontFamily = Constants.DEFAULT_FONT_FAMILY;
         String[] vals = fontString.split(",");
         for(int i=0;i<vals.length;i++) {
             String value = vals[i].trim().replaceAll("\"","");
