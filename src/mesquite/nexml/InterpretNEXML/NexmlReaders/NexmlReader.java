@@ -98,9 +98,19 @@ public class NexmlReader extends NexmlMesquiteManager {
 	}
 
     private static List<PropertyValue> treeProperties;
+    private static List<PropertyValue> canvasProperties;
+    private static List<PropertyValue> scaleProperties;
 
     public List<PropertyValue> getTreeProperties () {
         return treeProperties;
+    }
+
+    public List<PropertyValue> getCanvasProperties () {
+        return canvasProperties;
+    }
+
+    public List<PropertyValue> getScaleProperties () {
+        return scaleProperties;
     }
 
     /**
@@ -121,33 +131,29 @@ public class NexmlReader extends NexmlMesquiteManager {
 			Object pred = handler.getPredicate();
 
  			// Adding annotations for interpreting TSS commands:
-// 			debug("annotating " + segmentCount + " " + pred + " with value "+convertedValue);
 			handler.read(mesAssociable, mesListable, segmentCount);
  			if ( pred.toString().contains("tss:")) {
                  TSSHandler tsshandler = (TSSHandler) handler;
                  treeProperties = tsshandler.getmTreeProperties();
-				// if the TSSHandler handled this, getValue will now contain the mesquite-converted prop list
+                 canvasProperties = tsshandler.getmCanvasProperties();
  				convertedValue = handler.getValue();
  				if (convertedValue.equals(Constants.NO_RULE)) {
  					debug ("couldn't find " + pred.toString());
 					// no rule specified
  				}
  				else if (convertedValue != null) {
-//					debug("tss formatstring should now be "+ convertedValue);
 					String[] mesProps = convertedValue.toString().split(";");
 					for (String prop : mesProps) {
 						if (!prop.equals("")) {
 							String[] propParts = prop.split(":");
 							String convertedProp = propParts[0];
 							String convertedVal = propParts[1];
-//							debug("setting the annotation as " + convertedProp + "AND" + convertedVal);
 							NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
 							mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
 							try {
 								Long val = new Long(convertedVal);
 								mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
 							} catch (Exception e) {
-//								debug ("val wasn't a long");
 								mesAssociable.setAssociatedBit(mesNr,segmentCount,new Boolean("true"));
 							}
 						}

@@ -9,19 +9,24 @@ import java.util.List;
 import com.osbcp.cssparser.PropertyValue;
 
 import mesquite.lib.*;
+import mesquite.lib.duties.DrawTree;
 import mesquite.lib.duties.FileInterpreterI;
 import mesquite.lib.ColorDistribution;
 import mesquite.minimal.BasicFileCoordinator.BasicFileCoordinator;
 import mesquite.nexml.InterpretNEXML.NexmlReaders.NexmlReader;
 import mesquite.nexml.InterpretNEXML.NexmlWriters.NexmlWriter;
 
+import mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames;
 import mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator;
+import mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord;
+import mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker;
 import mesquite.trees.NodeLocsStandard.NodeLocsStandard;
 import org.nexml.model.Document;
 import org.nexml.model.DocumentFactory;
 
 public class InterpretNEXML extends FileInterpreterI {
     private List<PropertyValue> treeProperties;
+    private List<PropertyValue> canvasProperties;
 
     /*.................................................................................................................*/
 	public boolean startJob(String arguments, Object condition, boolean hiredByName) {
@@ -66,10 +71,11 @@ public class InterpretNEXML extends FileInterpreterI {
 		try {
 			nr.fillProjectFromNexml(xmlDocument,project);
             treeProperties = nr.getTreeProperties();
-	    } catch ( Exception e) {
+            canvasProperties = nr.getCanvasProperties();
+        } catch ( Exception e) {
 	    	e.printStackTrace();
 	    }
-        setTreeDefaults(project);
+        sendMesquiteCommands(project);
     }
 
 /* ============================  exporting ============================*/
@@ -109,49 +115,70 @@ public class InterpretNEXML extends FileInterpreterI {
    	 }
 	/*.................................................................................................................*/
 
-    public void setTreeDefaults(MesquiteProject project) {
+    public void sendMesquiteCommands(MesquiteProject project) {
         CommandChecker cc = new CommandChecker();
         BasicFileCoordinator projectCoordinator = (BasicFileCoordinator) project.doCommand("getCoordinatorModule", "", cc);
-        Commandable temp = (Commandable) projectCoordinator.doCommand("getEmployee", "#mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord", cc);
-        temp = (Commandable) temp.doCommand("makeTreeWindow","#mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker",cc);
-        temp = (Commandable) temp.doCommand("getTreeWindow", Integer.toString(1), cc);
+        BasicTreeWindowCoord treeWindowCoord = (BasicTreeWindowCoord) projectCoordinator.doCommand("getEmployee", "#mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord", cc);
+        BasicTreeWindowMaker treeWindowMaker = (BasicTreeWindowMaker) treeWindowCoord.doCommand("makeTreeWindow","#mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker",cc);
 
-        Commandable treeWindow = (Commandable) temp;
+        // treeWindow is a Commandable because the BasicTreeWindow class isn't public
+        Commandable treeWindow = (Commandable) treeWindowMaker.doCommand("getTreeWindow", Integer.toString(1), cc);
         Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
+        BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
+        BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
 
-        temp = (Commandable) temp.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
-        BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) temp;
-
-        temp = (Commandable) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.WeightedSquareTree.WeightedSquareTree", cc);
-        NodeLocsStandard nodeLocs = (NodeLocsStandard) temp.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
-
-        // these will have to be changed to whatever the original treeWindow size is...
         int width = dim.width;
         int height = dim.height;
+        String backgroundColor = "White";
+        String fontSize = "10";
+        String fontFamily = "Helvetica";
+
+        treeWindowMaker.doCommand("suppressEPCResponse","",cc);
+        treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
 
         // tell the treeDrawCoordinator to set canvas settings:
 //        treeDrawCoordinator.doCommand("setBackground", "Green",cc);
+        for (int i=0;i<canvasProperties.size();i++) {
+            PropertyValue pv = canvasProperties.get(i);
+            mesquite.lib.MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
+            if (pv.getProperty().equalsIgnoreCase("background-color")) {
+                //set the color to the standard color
+                backgroundColor = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("width")) {
+                width = Integer.parseInt(pv.getValue());
+            } else if (pv.getProperty().equalsIgnoreCase("height")) {
+                height = Integer.parseInt(pv.getValue());
+            } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                fontFamily = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                fontSize = pv.getValue();
+            }
+        }
+        treeWindow.doCommand("setSize", width+" "+height, cc);
+        treeDrawCoordinator.doCommand("setBackground", backgroundColor, cc);
+        taxonNames.doCommand("setFontSize",fontSize,cc);
+        taxonNames.doCommand("setFont",fontFamily,cc);
+
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.WeightedSquareTree.WeightedSquareTree", cc);
+        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
         for (int i=0;i<treeProperties.size();i++) {
             PropertyValue pv = treeProperties.get(i);
-            mesquite.lib.MesquiteMessage.notifyProgrammer("setting property "+pv.toString());
-            if (pv.getProperty().equalsIgnoreCase("background")) {
+            mesquite.lib.MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
+            if (pv.getProperty().equalsIgnoreCase("background-color")) {
                 //set the color to the standard color
-                mesquite.lib.MesquiteMessage.notifyProgrammer("background will be "+ convertToMesColorName(pv.getValue()));
-                treeDrawCoordinator.doCommand("setBackground", convertToMesColorName(pv.getValue()),cc);
+                backgroundColor = pv.getValue();
             } else if (pv.getProperty().equalsIgnoreCase("width")) {
-
-                width = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
+                width = Integer.parseInt(pv.getValue());
             } else if (pv.getProperty().equalsIgnoreCase("height")) {
-                height = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
+                height = Integer.parseInt(pv.getValue());
             } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-
+                fontFamily = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                fontSize = pv.getValue();
             }
         }
 
-        treeWindow.doCommand("setSize",width+" "+height,cc);
-//        ((TreeWindowMaker) temp).doCommand("suppressEPCResponse","",cc);
-//        temp = ((TreeWindowMaker) temp).doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
-//        mesquite.lib.MesquiteMessage.notifyProgrammer("commanding " + temp.toString());
+        treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
     }
 
     public static String convertToMesColorNumber ( String val ) {
@@ -167,7 +194,7 @@ public class InterpretNEXML extends FileInterpreterI {
     }
 
     public static String convertToMesColorName ( String val ) {
-        String mesColor = null;
+        String mesColor = ColorDistribution.standardColorNames.getValue(4 /*white*/);
 
         for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
             String thisColor = ColorDistribution.standardColorNames.getValue(i).toLowerCase();

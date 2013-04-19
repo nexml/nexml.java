@@ -1,8 +1,10 @@
 
 package mesquite.nexml.InterpretNEXML.AnnotationHandlers;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 
 import mesquite.lib.Associable;
@@ -29,8 +31,9 @@ public class TSSHandler extends NamespaceHandler {
 	private List<Rule> mTSSList;
 	private Hashtable mTSSHash;
     private Vector<PropertyValue> mTreeProperties;
+    private Vector<PropertyValue> mCanvasProperties;
 
-	public TSSHandler(Annotatable annotatable,Annotation annotation) {
+    public TSSHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
         File mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
 		Scanner scanner = null;
@@ -59,6 +62,7 @@ public class TSSHandler extends NamespaceHandler {
 			}
 		}
         mTreeProperties = new Vector<PropertyValue>();
+        mCanvasProperties = new Vector<PropertyValue>();
         parseGeneralSelectors();
 	}
 
@@ -170,13 +174,80 @@ public class TSSHandler extends NamespaceHandler {
 
 
     // parses the general selectors "canvas," "tree," and "scale"
-    public String parseGeneralSelectors (){
-        NexmlMesquiteManager.debug("parseGeneralSelectors");
+    public void parseGeneralSelectors (){
+        // set defaults
+        String backgroundColor = "White";
+        String fontFamily = "sans-serif";
+        String fontSize = "12";
+        String fontStyle = "normal";
+
         List<PropertyValue> pvs = getClass ("canvas", "");
         if (pvs != null) {
-            mesquiteWindowAnnotation ( pvs );
+            int j = 0;
+            while (j<pvs.size()) {
+                PropertyValue pv = pvs.get(j++);
+                NexmlMesquiteManager.debug("parsing canvas pv "+pv.getProperty());
+                // for each pv, if it is a compound value, break it into simple pvs and add them individually
+                if (pv.getProperty().equalsIgnoreCase("font")) {
+                    //font-style font-size font-family
+                    String[] split_pvs = pv.getValue().split(" ",2);
+                    if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
+                        pvs.add(new PropertyValue("font-style",split_pvs[0]));
+                        split_pvs = split_pvs[1].split(" ",2);
+                    }
+                    pvs.add(new PropertyValue("font-size",split_pvs[0]));
+                    pvs.add(new PropertyValue("font-family",split_pvs[1]));
+                } else if (pv.getProperty().contains("background")) {
+                    //Mesquite can only handle setting the color of the canvas. Ignore everything else.
+                    //set the color to a standard color
+                    backgroundColor = InterpretNEXML.convertToMesColorName(pv.getValue());
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    String[] vals = pv.getValue().split(",");
+                    for(int i=0;i<vals.length;i++) {
+                        String value = vals[i].trim().replaceAll("\"","");
+                        Font f = new Font(value,Font.PLAIN,12); // these are arbitrary values; we just want to see if value is a valid font name
+                        if (f.getFamily().equalsIgnoreCase("Dialog")) {
+                            continue;
+                        }
+                        fontFamily = value;
+                        break;
+                    }
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    //convert this value to a point number
+                    String unit = pv.getValue().replaceAll("\\d","");
+                    int value = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
+                    if (unit.contains("%")) {
+                        // assume percentage is based on a default size of 12pt
+                        value = 12 * (value/100);
+                    } else if (unit.contains("in")) {
+                        // assume 72 pt per inch
+                        value = value * 72;
+                    } else if (unit.contains("cm")) {
+                        // assume 28.3 pt per cm
+                        value = (int) (value * 28.3);
+                    }
+                    fontSize = String.valueOf(value);
+                } else if ((pv.getProperty().equalsIgnoreCase("width")) || (pv.getProperty().equalsIgnoreCase("height"))) {
+                    //convert this value to a single pixel number
+                    String unit = pv.getValue().replaceAll("\\d","");
+                    int value = Integer.parseInt(pv.getValue().replaceAll("\\D",""));
+                    if (unit.contains("%")) {
+                        // assume percentage is based on a window of 800x800px
+                        value = 800 * (value/100);
+                    } else if (unit.contains("in")) {
+                        // assume 72 px per inch
+                        value = value * 72;
+                    } else if (unit.contains("cm")) {
+                        // assume 28.3 px per cm
+                        value = (int) (value * 28.3);
+                    }
+                    mCanvasProperties.add(new PropertyValue(pv.getProperty(),String.valueOf(value)));
+                }
+            }
         }
-        return "";
+        mCanvasProperties.add(new PropertyValue("font-family",fontFamily));
+        mCanvasProperties.add(new PropertyValue("font-size",fontSize));
+        mCanvasProperties.add(new PropertyValue("background-color",backgroundColor));
     }
 // This parses the actual xml meta tag for TSS
 // index is the Mesquite node ID
@@ -223,26 +294,6 @@ public class TSSHandler extends NamespaceHandler {
 		return pvs;
 	}
 
-    private void mesquiteWindowAnnotation ( List<PropertyValue> pvs ) {
-        String formatted_pvs = "";
-        for (PropertyValue pv : pvs) {
-            String val = pv.getValue();
-
-            if (pv.getProperty().equals("background")) {
-                String[] props = val.split("\\s+");
-                for (int i=0; i<props.length; i++) {
-                    String color = InterpretNEXML.convertToMesColorNumber(props[i]);
-                    if (color != null) { // this is a color word
-                        color = ColorDistribution.getStandardColorName(Integer.parseInt(color));
-                        formatted_pvs = formatted_pvs + "\nsetBackground " + color +";";
-                    }
-                }
-            }
-            mTreeProperties.add(pv);
-        }
-    }
-
-
     private String mesquiteNodeAnnotation ( Annotatable subj, List<PropertyValue> pvs, String tssValue ) {
 		String formatted_pvs = "";
 		for (PropertyValue pv : pvs) {
@@ -278,8 +329,10 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
     public Vector<PropertyValue> getmTreeProperties () {
-        NexmlMesquiteManager.debug("we have "+mTreeProperties.size()+ " tree properties");
         return mTreeProperties;
+    }
+    public Vector<PropertyValue> getmCanvasProperties () {
+        return mCanvasProperties;
     }
 }
 
