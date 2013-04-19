@@ -125,7 +125,7 @@ public class InterpretNEXML extends FileInterpreterI {
         Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
         BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
         BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
-        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.WeightedSquareTree.WeightedSquareTree", cc);
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.StyledSquareTree.StyledSquareTree", cc);
         NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
 
         int width = dim.width;
