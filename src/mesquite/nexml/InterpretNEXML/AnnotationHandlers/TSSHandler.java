@@ -32,6 +32,7 @@ public class TSSHandler extends NamespaceHandler {
 	private Hashtable mTSSHash;
     private Vector<PropertyValue> mTreeProperties;
     private Vector<PropertyValue> mCanvasProperties;
+    private Vector<PropertyValue> mScaleProperties;
 
     public TSSHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
@@ -55,14 +56,50 @@ public class TSSHandler extends NamespaceHandler {
 		mTSSHash = new Hashtable();
 		for ( Rule r : mTSSList) {
 			// we want to hash each rule as a value for each selector key separately.
-			List<Selector> selectors = r.getSelectors();
+            List<Selector> selectors = r.getSelectors();
 			List<PropertyValue> pvs = r.getPropertyValues();
-			for (Selector s : selectors) {
-				mTSSHash.put(s.toString(), pvs);
+			for (Selector selector : selectors) {
+                String selectorName = selector.toString();
+                String selectorSubClass = "";
+
+                String[] selectorParts = selector.toString().split("\\.");
+                if (selectorParts.length > 1) {  // this selector has subclasses
+                    selectorName = selectorParts[0];
+                    selectorSubClass = selectorParts[1];
+                }
+
+                selectorParts = selector.toString().split("\\[");
+                if (selectorParts.length > 1) {  // this selector has ranges
+                    selectorName = selectorParts[0];
+                    String min = "";
+                    String max = "";
+                    for (int i=1;i<selectorParts.length;i++) {
+                        String str = selectorParts[i].replace("]","");
+                        if (str.contains("min")) {
+                            min = str.replaceAll("min\\s*=","");
+                        } else if (str.contains("max")) {
+                            max = str.replaceAll("max\\s*=","");
+                        }
+                    }
+                    selectorSubClass = min+"."+max;
+                }
+                if (selectorSubClass.isEmpty()) {
+                    NexmlMesquiteManager.debug("putting "+selectorName+" only ");
+                    mTSSHash.put(selectorName, pvs);
+                } else {
+                    NexmlMesquiteManager.debug("putting "+selectorName+" with subclass "+selectorSubClass);
+                    Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
+                    if (subClassHash == null) {
+                         subClassHash = new Hashtable();
+                    }
+                    subClassHash.put(selectorSubClass,pvs);
+                    mTSSHash.put(selectorName,subClassHash);
+                }
 			}
 		}
         mTreeProperties = new Vector<PropertyValue>();
         mCanvasProperties = new Vector<PropertyValue>();
+        mScaleProperties = new Vector<PropertyValue>();
         parseGeneralSelectors();
 	}
 
@@ -178,10 +215,8 @@ public class TSSHandler extends NamespaceHandler {
         List<PropertyValue> pvs = getClass ("canvas", "");
         if (pvs != null) {
             for (PropertyValue pv : pvs) {
-                NexmlMesquiteManager.debug("parsing canvas pv "+pv.getProperty());
                 if (pv.getProperty().equalsIgnoreCase("background-color")) {
                     //Mesquite can only handle setting the color of the canvas. Ignore everything else.
-                    //set the color to a standard color
                     mCanvasProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
                 } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
                     String fontFamily = chooseAFont(pv.getValue());
@@ -205,15 +240,6 @@ public class TSSHandler extends NamespaceHandler {
         pvs = getClass ("tree", "");
         if (pvs != null) {
             for (PropertyValue pv : pvs) {
-                NexmlMesquiteManager.debug("parsing tree pv "+pv.getProperty()+" with value "+pv.getValue());
-                /*
-                  border-width: 1px;
-                  border-color: black;
-                  border-style: solid;
-                  layout: rectangular | triangular | radial | polar
-                  tip-orientation: left | right | top | bottom
-                  scaled: true | false;
-                */
                 if (pv.getProperty().equalsIgnoreCase("layout")) {
                     mTreeProperties.add(new PropertyValue("layout", "rectangular"));
                 } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
@@ -225,6 +251,36 @@ public class TSSHandler extends NamespaceHandler {
                     //this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
                     mTreeProperties.add(new PropertyValue("tip-orientation",pv.getValue().toUpperCase()));
+                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
+                    mTreeProperties.add(new PropertyValue("scaled",pv.getValue()));
+                }
+            }
+        }
+
+        pvs = getClass ("scale", "");
+        /*
+            visible: true|false
+            font-family, font-size, etc.
+            border-color: black;
+            border-size: 1px;
+            border-style: solid;
+            scale-width: value
+            scale-title: “text”   */
+        if (pvs != null) {
+            for (PropertyValue pv : pvs) {
+                if (pv.getProperty().equalsIgnoreCase("layout")) {
+                    mScaleProperties.add(new PropertyValue("layout", "rectangular"));
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
+                    mScaleProperties.add(new PropertyValue("border-width",String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    mScaleProperties.add(new PropertyValue("border-color",convertToMesColorNumber(pv.getValue())));
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                    mScaleProperties.add(new PropertyValue("tip-orientation",pv.getValue().toUpperCase()));
+                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
+                    mScaleProperties.add(new PropertyValue("scaled",pv.getValue()));
                 }
             }
         }
@@ -243,7 +299,7 @@ public class TSSHandler extends NamespaceHandler {
 		try {
 			pvs = getClass(tssClass, value);
 			if (pvs != null) {
-				NexmlMesquiteManager.debug("found rule " + tssClass + ", parsing " + value);
+//				NexmlMesquiteManager.debug("found rule " + tssClass + ", parsing " + value);
 				setValue(mesquiteNodeAnnotation(pvs, value));
 			} else {
 				// there is no TSS rule for this
@@ -262,12 +318,36 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
 	private List<PropertyValue> getClass (String tssClassName, String tssValue) {
-// here we need to process the tssValue to see if it's a string or range, because those are special cases for selectors
-		NexmlMesquiteManager.debug("getting TSS class " + tssClassName + " with value " + tssValue);
-		List<PropertyValue> pvs = (List) mTSSHash.get(tssClassName + "." + tssValue);
-		if (pvs == null) {
-			pvs = (List) mTSSHash.get(tssClassName);
-		}
+//		NexmlMesquiteManager.debug("getting TSS class " + tssClassName + " with value " + tssValue);
+		Object hashvalue = mTSSHash.get(tssClassName);
+        if (hashvalue == null) {
+            NexmlMesquiteManager.debug("TSS class "+tssClassName+" not found");
+            return null;
+        }
+        List<PropertyValue> pvs = null;
+        if (hashvalue.getClass()==Hashtable.class) {
+            // check the tssValue to see if it's a string
+            pvs = (List)((Hashtable)hashvalue).get(tssValue);
+
+            // check to see if the value is in a range
+            if (pvs == null) {
+                for (Enumeration e = ((Hashtable) hashvalue).keys(); e.hasMoreElements();) {
+                    String key = (String) e.nextElement();
+                    String[] keyParts = key.split("\\.");
+                    int min = Integer.parseInt(keyParts[0]);
+                    int max = Integer.parseInt(keyParts[1]);
+                    int val = Integer.parseInt(tssValue);
+                    if ((val>=min) && (val<=max)) {
+                        pvs = (List)((Hashtable)hashvalue).get(key);
+                    }
+                }
+            }
+        } else {
+            pvs = (List) hashvalue;
+        }
+        if (pvs == null) {
+            return null;
+        }
         Vector<PropertyValue> new_pvs = new Vector<PropertyValue>();
         // process the compound properties into single properties.
         for (PropertyValue pv : pvs) {
@@ -332,9 +412,9 @@ public class TSSHandler extends NamespaceHandler {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
             if (pv.getProperty().equals("border-color")) {
-                formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(pv.getValue());
+                formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
 			} else if (pv.getProperty().equals("border-width")) {
-                formatted_pvs = formatted_pvs + ";" + "width:" + pv.getValue();
+                formatted_pvs = formatted_pvs + ";" + "width:" + val;
             } else if (pv.getProperty().equals("color")) {
 				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
 			} else if (pv.getProperty().equals("collapsed")) {
@@ -382,8 +462,8 @@ public class TSSHandler extends NamespaceHandler {
     private String chooseAFont (String fontString) {
         String fontFamily = Constants.DEFAULT_FONT_FAMILY;
         String[] vals = fontString.split(",");
-        for(int i=0;i<vals.length;i++) {
-            String value = vals[i].trim().replaceAll("\"","");
+        for (String val : vals) {
+            String value = val.trim().replaceAll("\"","");
             Font f = new Font(value,Font.PLAIN,12); // these are arbitrary values; we just want to see if value is a valid font name
             if (f.getFamily().equalsIgnoreCase("Dialog")) {
                 continue;
@@ -395,7 +475,9 @@ public class TSSHandler extends NamespaceHandler {
     }
     private String convertToMesColorNumber ( String val ) {
         String mesColor = null;
-
+        if (val.equalsIgnoreCase("VALUE")) {
+            return "VALUE";
+        }
         for (int i=0;i< ColorDistribution.standardColorNames.getSize();i++) {
             String thisColor = ColorDistribution.standardColorNames.getValue(i);
             if(val.equalsIgnoreCase(thisColor)) {
@@ -407,7 +489,9 @@ public class TSSHandler extends NamespaceHandler {
 
     private String convertToMesColorName ( String val ) {
         String mesColor = null;
-
+        if (val.equalsIgnoreCase("VALUE")) {
+            return "VALUE";
+        }
         for (int i=0;i<ColorDistribution.standardColorNames.getSize();i++) {
             String thisColor = ColorDistribution.standardColorNames.getValue(i);
             if(val.equalsIgnoreCase(thisColor)) {
@@ -416,7 +500,5 @@ public class TSSHandler extends NamespaceHandler {
         }
         return mesColor;
     }
-
-
 }
 

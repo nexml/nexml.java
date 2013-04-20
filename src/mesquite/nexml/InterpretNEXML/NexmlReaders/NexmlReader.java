@@ -133,9 +133,9 @@ public class NexmlReader extends NexmlMesquiteManager {
  			// Adding annotations for interpreting TSS commands:
 			handler.read(mesAssociable, mesListable, segmentCount);
  			if ( pred.toString().contains("tss:")) {
-                 TSSHandler tsshandler = (TSSHandler) handler;
-                 treeProperties = tsshandler.getmTreeProperties();
-                 canvasProperties = tsshandler.getmCanvasProperties();
+                TSSHandler tsshandler = (TSSHandler) handler;
+                treeProperties = tsshandler.getmTreeProperties();
+                canvasProperties = tsshandler.getmCanvasProperties();
  				convertedValue = handler.getValue();
  				if (convertedValue.equals(Constants.NO_RULE)) {
  					debug ("couldn't find " + pred.toString());

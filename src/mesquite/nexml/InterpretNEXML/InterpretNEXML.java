@@ -26,6 +26,7 @@ import org.nexml.model.DocumentFactory;
 public class InterpretNEXML extends FileInterpreterI {
     private List<PropertyValue> treeProperties;
     private List<PropertyValue> canvasProperties;
+    private List<PropertyValue> scaleProperties;
 
     /*.................................................................................................................*/
 	public boolean startJob(String arguments, Object condition, boolean hiredByName) {
@@ -71,6 +72,7 @@ public class InterpretNEXML extends FileInterpreterI {
 			nr.fillProjectFromNexml(xmlDocument,project);
             treeProperties = nr.getTreeProperties();
             canvasProperties = nr.getCanvasProperties();
+            scaleProperties = nr.getScaleProperties();
             sendMesquiteCommands(project);
         } catch ( Exception e) {
 	    	e.printStackTrace();
@@ -138,9 +140,7 @@ public class InterpretNEXML extends FileInterpreterI {
         treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
 
         // tell the treeDrawCoordinator to set canvas settings:
-//        treeDrawCoordinator.doCommand("setBackground", "Green",cc);
-        for (int i=0;i<canvasProperties.size();i++) {
-            PropertyValue pv = canvasProperties.get(i);
+        for (PropertyValue pv : canvasProperties) {
             mesquite.lib.MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
             if (pv.getProperty().equalsIgnoreCase("background-color")) {
                 //set the color to the standard color
@@ -160,23 +160,13 @@ public class InterpretNEXML extends FileInterpreterI {
         taxonNames.doCommand("setFontSize",fontSize,cc);
         taxonNames.doCommand("setFont",fontFamily,cc);
 
-
         String borderWidth = "3";
         String borderColor = "0";
         String layout = "rectangular";
         String tipOrientation = "RIGHT";
         boolean scaled = false;
 
-        /*
-          border-width: 1px;
-          border-color: black;
-          border-style: solid;
-          layout: rectangular | triangular | radial | polar
-          tip-orientation: left | right | top | bottom
-          scaled: true | false;
-        */
-        for (int i=0;i<treeProperties.size();i++) {
-            PropertyValue pv = treeProperties.get(i);
+        for (PropertyValue pv : treeProperties) {
             mesquite.lib.MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
             if (pv.getProperty().equalsIgnoreCase("border-width")) {
                 borderWidth = pv.getValue();
@@ -202,6 +192,29 @@ public class InterpretNEXML extends FileInterpreterI {
             treeDrawer.doCommand("orientRIGHT","",cc);
         } else if (tipOrientation.equalsIgnoreCase("down")) {
             treeDrawer.doCommand("orientDOWN","",cc);
+        }
+        /*
+        visible: true|false
+        font-family, font-size, etc.
+        border-color: black;
+        border-size: 1px;
+        border-style: solid;
+        scale-width: value
+        scale-title: “text”   */
+        String scaleVisible;
+        for (PropertyValue pv : scaleProperties) {
+            mesquite.lib.MesquiteMessage.notifyProgrammer("setting scaleProperty "+pv.toString());
+            if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                borderWidth = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                borderColor = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("visible")) {
+                scaleVisible = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                fontFamily = pv.getValue();
+            } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                fontSize = pv.getValue();
+            }
         }
 
         treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
