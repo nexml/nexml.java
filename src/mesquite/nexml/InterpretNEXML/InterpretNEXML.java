@@ -138,6 +138,7 @@ public class InterpretNEXML extends FileInterpreterI {
 
         treeWindowMaker.doCommand("suppressEPCResponse","",cc);
         treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
+        nodeLocs.doCommand("toggleCenter","on",cc);
 
         // tell the treeDrawCoordinator to set canvas settings:
         for (PropertyValue pv : canvasProperties) {
