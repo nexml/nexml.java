@@ -84,10 +84,8 @@ public class TSSHandler extends NamespaceHandler {
                     selectorSubClass = min+"."+max;
                 }
                 if (selectorSubClass.isEmpty()) {
-                    NexmlMesquiteManager.debug("putting "+selectorName+" only ");
                     mTSSHash.put(selectorName, pvs);
                 } else {
-                    NexmlMesquiteManager.debug("putting "+selectorName+" with subclass "+selectorSubClass);
                     Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
                     if (subClassHash == null) {
                          subClassHash = new Hashtable();
@@ -292,22 +290,10 @@ public class TSSHandler extends NamespaceHandler {
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
 		String tssClass = parts[1];
-		Annotatable subj = getSubject();
+//		Annotatable subj = getSubject();
 		String value = getValue().toString();
-		List<PropertyValue> pvs = null;
-//		NexmlMesquiteManager.debug("looking for " + tssClass);
-		try {
-			pvs = getClass(tssClass, value);
-			if (pvs != null) {
-//				NexmlMesquiteManager.debug("found rule " + tssClass + ", parsing " + value);
-				setValue(mesquiteNodeAnnotation(pvs, value));
-			} else {
-				// there is no TSS rule for this
-				setValue(Constants.NO_RULE);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        String newValue = mesquiteNodeAnnotation(tssClass, value);
+        setValue(newValue);
 	}
 
 	@Override
@@ -406,9 +392,14 @@ public class TSSHandler extends NamespaceHandler {
         return new_pvs;
 	}
 
-    private String mesquiteNodeAnnotation (List<PropertyValue> pvs, String tssValue ) {
-		String formatted_pvs = "";
-		for (PropertyValue pv : pvs) {
+    private String mesquiteNodeAnnotation (String tssClass, String tssValue ) {
+		String formatted_pvs = "tss:"+tssClass+ "=" +tssValue;
+//		NexmlMesquiteManager.debug("looking for " + tssClass);
+        List<PropertyValue> pvs = getClass(tssClass, tssValue);
+        if (pvs == null) {
+            return Constants.NO_RULE;
+        }
+        for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
 			val = val.replaceAll("value|VALUE", tssValue);
             if (pv.getProperty().equals("border-color")) {
@@ -418,15 +409,11 @@ public class TSSHandler extends NamespaceHandler {
             } else if (pv.getProperty().equals("color")) {
 				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
 			} else if (pv.getProperty().equals("collapsed")) {
-	//  			<triangled = on >
 				if (Boolean.getBoolean(val)) {
 					formatted_pvs = formatted_pvs + ";" + "triangled:on";
 				}
 			}
 		}
-        if (formatted_pvs.startsWith(";")) {
-            formatted_pvs = formatted_pvs.substring(1);
-        }
 		NexmlMesquiteManager.debug("converted to Mesquite annotation " + formatted_pvs);
 		return formatted_pvs;
 	}
@@ -436,6 +423,9 @@ public class TSSHandler extends NamespaceHandler {
     }
     public Vector<PropertyValue> getmCanvasProperties () {
         return mCanvasProperties;
+    }
+    public Vector<PropertyValue> getmScaleProperties () {
+        return mScaleProperties;
     }
 
     private int convertToPixels (String stringValue, int defaultValue) {
