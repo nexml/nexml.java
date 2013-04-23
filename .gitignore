@@ -6,3 +6,5 @@ bin
 .idea/
 .idea/libraries/
 .idea/workspace.xml
+
+.idea/libraries/bin.xml
