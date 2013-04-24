@@ -51,19 +51,30 @@ public class NexmlWriter extends NexmlMesquiteManager {
 	private void writeAnnotation(NameReference nr,Annotatable annotatable,Object value) {
 		URI namespace = nr.getNamespace();
 		String predicate = nr.getName();
-		if ( null == namespace ) {
-			namespace = URI.create(Constants.NRURIString);
-			if ( predicate.indexOf(":") < 0 ) {
-				predicate = Constants.NRPrefix + ":" + nr.getName();
-			}
+        if ( null == namespace ) {
+            if (nr.toString().contains("tss")) {
+                namespace = URI.create(Constants.TSSURIString);
+                String[] valparts = value.toString().split("=");
+                if (valparts.length < 2) {
+                    value = "";
+                } else {
+                    value = valparts[1];
+                }
+                predicate = Constants.TSSPrefix + ":" + valparts[0];
+            } else {
+                namespace = URI.create(Constants.NRURIString);
+                if ( predicate.contains(":")) {
+                    predicate = Constants.NRPrefix + ":" + nr.getName();
+                }
+            }
 		}
-		Annotation annotation = annotatable.addAnnotationValue(predicate,namespace,value);
+        Annotation annotation = annotatable.addAnnotationValue(predicate,namespace,value);
 		PredicateHandler handler = getNamespaceHandler(annotatable,annotation);
 		if ( null == handler ) {
 			handler = getPredicateHandler(annotatable,annotation);
 		}
 		if ( null != handler ) {
-			handler.write();
+            handler.write();
 		}
 	}
 	
@@ -73,7 +84,7 @@ public class NexmlWriter extends NexmlMesquiteManager {
 	 * @param annotatable
 	 * @param segmentCount
 	 */
-	protected void writeAnnotations(Associable associable, Annotatable annotatable, int segmentCount) {		
+	protected void writeAnnotations(Associable associable, Annotatable annotatable, int segmentCount) {
 		int numDoubs = associable.getNumberAssociatedDoubles();
 		for ( int i = 0; i < numDoubs; i++ ){  
 			DoubleArray array = associable.getAssociatedDoubles(i);

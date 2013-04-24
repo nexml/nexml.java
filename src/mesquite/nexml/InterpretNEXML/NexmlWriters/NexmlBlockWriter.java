@@ -44,13 +44,12 @@ public abstract class NexmlBlockWriter extends NexmlWriter {
 	 */
 	public void writeBlocks(Document xmlProject,List<FileElement> mesBlocks) {
 		for ( FileElement mesFE : mesBlocks ) {
-			Annotatable xmlBlock = writeBlock(xmlProject,mesFE);
+            Annotatable xmlBlock = writeBlock(xmlProject,mesFE);
 			writeAttributes(mesFE,xmlBlock);
-			if ( mesFE instanceof Associable ) {
-				Associable mesA = (Associable)mesFE;
-				int mesNumParts = mesA.getNumberOfParts();
-				for ( int i = 0; i < mesNumParts; i++ ) {
-					writeAnnotations(mesA,getThingInXmlBlock(xmlBlock,i),i);
+			if ( mesFE != null ) {
+				int mesNumParts = mesFE.getNumberOfParts();
+                for ( int i = 0; i < mesNumParts; i++ ) {
+					writeAnnotations(mesFE,getThingInXmlBlock(xmlBlock,i),i);
 				}
 			}
 		}		
