@@ -2,13 +2,8 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
-import mesquite.lib.Associable;
-import mesquite.lib.Attachable;
-import mesquite.lib.EmployerEmployee;
-import mesquite.lib.Listable;
-import mesquite.lib.MesquiteFile;
-import mesquite.lib.MesquiteProject;
-import mesquite.lib.NameReference;
+
+import mesquite.lib.*;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.TSSHandler;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
@@ -21,8 +16,6 @@ import org.nexml.model.Document;
 import org.nexml.model.Matrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
-
-import com.osbcp.cssparser.PropertyValue;
 
 public class NexmlReader extends NexmlMesquiteManager {
 
@@ -41,6 +34,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 	 * @return
 	 */
 	public MesquiteProject fillProjectFromNexml(Document xmlDocument,MesquiteProject mesProject) {
+        resetNamespaceHandlers();
 		List<OTUs> xmlOTUsList = xmlDocument.getOTUsList();
 		MesquiteFile mesFile = mesProject.getFile(0);
 		// process taxa blocks
@@ -70,8 +64,11 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
-
-		return mesProject;
+        TSSHandler tsshandler = (TSSHandler) getNamespaceHandler(Constants.TSSURI);
+        if (tsshandler != null) {
+            tsshandler.initializeGeneralSelectors(mesProject);
+        }
+        return mesProject;
 	}
 
 	/**
@@ -92,23 +89,6 @@ public class NexmlReader extends NexmlMesquiteManager {
 			mesAttachable.attach(aw);
 		}
 	}
-
-    private static List<PropertyValue> treeProperties;
-    private static List<PropertyValue> canvasProperties;
-    private static List<PropertyValue> scaleProperties;
-
-    public List<PropertyValue> getTreeProperties () {
-        return treeProperties;
-    }
-
-    public List<PropertyValue> getCanvasProperties () {
-        return canvasProperties;
-    }
-
-    public List<PropertyValue> getScaleProperties () {
-        return scaleProperties;
-    }
-
     /**
 	 *
 	 * @param mesAssociable
@@ -127,11 +107,9 @@ public class NexmlReader extends NexmlMesquiteManager {
 
  			// Adding annotations for interpreting TSS commands:
 			handler.read(mesAssociable, mesListable, segmentCount);
- 			if ( pred.toString().contains("tss:")) {
-                TSSHandler tsshandler = (TSSHandler) handler;
-                treeProperties = tsshandler.getmTreeProperties();
-                canvasProperties = tsshandler.getmCanvasProperties();
-                scaleProperties = tsshandler.getmScaleProperties();
+			if ( pred.toString().contains("tss:")) {
+//            if (handler instanceof TSSHandler) {
+
                 convertedValue = handler.getValue();
  				if (convertedValue.equals(Constants.NO_RULE)) {
  					debug ("couldn't find " + pred.toString());
@@ -179,5 +157,4 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 		}
 	}
-
 }

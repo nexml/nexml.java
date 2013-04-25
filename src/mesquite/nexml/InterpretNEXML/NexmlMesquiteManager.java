@@ -2,6 +2,7 @@ package mesquite.nexml.InterpretNEXML;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.net.URI;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Hashtable;
@@ -27,7 +28,7 @@ public class NexmlMesquiteManager {
 	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
 
-	private Hashtable mNamespaceHandlers;
+	private static Hashtable mNamespaceHandlers;
 
 	private EmployerEmployee mEmployerEmployee;
 
@@ -39,7 +40,6 @@ public class NexmlMesquiteManager {
 		mEmployerEmployee = employerEmployee;
 		mPredicateHandlerMapping = new Properties();
 		mNamespaceHandlerMapping = new Properties();
-		mNamespaceHandlers = new Hashtable();
 	    try {
 	    	mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
 	    	mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
@@ -47,6 +47,26 @@ public class NexmlMesquiteManager {
 	    	e.printStackTrace();
 	    }
 	}
+
+    public void setNamespaceHandler(URI uriString, NamespaceHandler nh) {
+        if (mNamespaceHandlers == null) {
+            mNamespaceHandlers = new Hashtable();
+        }
+        mNamespaceHandlers.put(uriString, nh);
+    }
+
+    public void resetNamespaceHandlers() {
+        mNamespaceHandlers = new Hashtable();
+    }
+
+
+    public NamespaceHandler getNamespaceHandler(URI uriString) {
+        if (mNamespaceHandlers == null) {
+            return null;
+        } else {
+            return (NamespaceHandler) mNamespaceHandlers.get(uriString);
+        }
+    }
 
 	/**
 	 *
@@ -82,9 +102,8 @@ public class NexmlMesquiteManager {
 
 	/**
 	 *
-	 * @param subject
-	 * @param predicate
-	 * @param value
+	 * @param annotatable
+	 * @param annotation
 	 * @return
 	 */
 	protected PredicateHandler getPredicateHandler(Annotatable annotatable, Annotation annotation) {
@@ -109,14 +128,16 @@ public class NexmlMesquiteManager {
 
 	/**
 	 *
-	 * @param uri
-	 * @return
+     * @param annotatable
+     * @param annotation
+     * @return
 	 */
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
 		String handlerClassName = null;
-		String uriString = annotation.getPredicateNamespace().toString();
-		NamespaceHandler nh = (NamespaceHandler) mNamespaceHandlers.get(uriString);
-		if (nh != null) {
+        URI uri = annotation.getPredicateNamespace();
+		NamespaceHandler nh = getNamespaceHandler(uri);
+        debug ("getNamespaceHandler "+uri.toString());
+        if (nh != null) {
 			// don't reinstantiate all handlers all the time; if one has already been instantiated,
 			// just update the annotation for the existing handler
 // 			debug ("using " + nh.getClass().toString());
@@ -129,11 +150,9 @@ public class NexmlMesquiteManager {
 			}
 			nh.setPredicate(property);
 		} else {
-			debug("first time looking for " + uriString);
 			for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-				if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
+				if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
 					handlerClassName = name;
-					debug ("found " + handlerClassName);
 					break;
 				}
 			}
@@ -142,7 +161,7 @@ public class NexmlMesquiteManager {
 					Class<?> handlerClass = Class.forName(handlerClassName);
 					Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
 					nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);
-					mNamespaceHandlers.put(uriString, nh);
+					setNamespaceHandler(uri, nh);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
