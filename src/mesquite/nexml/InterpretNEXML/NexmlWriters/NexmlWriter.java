@@ -52,15 +52,11 @@ public class NexmlWriter extends NexmlMesquiteManager {
 		URI namespace = nr.getNamespace();
 		String predicate = nr.getName();
         if ( null == namespace ) {
-            if (nr.toString().contains("tss")) {
+            if (nr.toString().contains(Constants.TSSPrefix)) {
                 namespace = URI.create(Constants.TSSURIString);
-                String[] valparts = value.toString().split("=");
-                if (valparts.length < 2) {
+                if (value.toString().equals(Constants.NO_VALUE)) {
                     value = "";
-                } else {
-                    value = valparts[1];
                 }
-                predicate = Constants.TSSPrefix + ":" + valparts[0];
             } else {
                 namespace = URI.create(Constants.NRURIString);
                 if ( !predicate.contains(":")) {

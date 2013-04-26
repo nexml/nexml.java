@@ -308,9 +308,12 @@ public class TSSHandler extends NamespaceHandler {
             String[] mesProps = convertedValue.toString().split(";");
             for (String prop : mesProps) {
                 if (prop.contains("tss:")) {
-                    String[] propParts = prop.split(":");
+                    String[] propParts = prop.split("=");
                     String convertedProp = propParts[0];
-                    String convertedVal = propParts[1];
+                    String convertedVal = Constants.NO_VALUE;
+                    if (propParts.length > 1) {
+                        convertedVal = propParts[1];
+                    }
                     NameReference mesNr = associable.makeAssociatedObjects(convertedProp);
                     associable.setAssociatedObject(mesNr,index, convertedVal);
                 } else {
@@ -337,10 +340,9 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
 	private List<PropertyValue> getClass (String tssClassName, String tssValue) {
-//		NexmlMesquiteManager.debug("getting TSS class " + tssClassName + " with value " + tssValue);
 		Object hashvalue = mTSSHash.get(tssClassName);
         if (hashvalue == null) {
-            NexmlMesquiteManager.debug("TSS class "+tssClassName+" not found");
+            MesquiteMessage.discreetNotifyUser("TSS class "+tssClassName+" not found");
             return null;
         }
         List<PropertyValue> pvs = null;
