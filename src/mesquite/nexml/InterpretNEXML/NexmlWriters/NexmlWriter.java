@@ -63,7 +63,7 @@ public class NexmlWriter extends NexmlMesquiteManager {
                 predicate = Constants.TSSPrefix + ":" + valparts[0];
             } else {
                 namespace = URI.create(Constants.NRURIString);
-                if ( predicate.contains(":")) {
+                if ( !predicate.contains(":")) {
                     predicate = Constants.NRPrefix + ":" + nr.getName();
                 }
             }
