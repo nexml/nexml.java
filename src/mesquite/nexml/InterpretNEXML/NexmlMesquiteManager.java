@@ -23,7 +23,7 @@ import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandlerImpl;
 
 public class NexmlMesquiteManager {
-	private static boolean debugging = true;
+	private static boolean debugging = false;
 
 	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
@@ -122,7 +122,6 @@ public class NexmlMesquiteManager {
 		if ( null == ph ) {
 			ph = new PredicateHandlerImpl(annotatable,annotation);
 		}
-		debug("Using predicateHandler " + ph.toString());
 		return ph;
 	}
 
@@ -136,11 +135,9 @@ public class NexmlMesquiteManager {
 		String handlerClassName = null;
         URI uri = annotation.getPredicateNamespace();
 		NamespaceHandler nh = getNamespaceHandlerFromURI(uri);
-        debug ("getNamespaceHandler "+annotation.toString()+" with property "+annotation.getProperty()+", value "+annotation.getValue()+", uri "+annotation.getPredicateNamespace());
         if (nh != null) {
 			// don't reinstantiate all handlers all the time; if one has already been instantiated,
 			// just update the annotation for the existing handler
-// 			debug ("using " + nh.getClass().toString());
 			nh.setSubject(annotatable);
 			nh.setValue(annotation.getValue());
 			String property = annotation.getProperty();
