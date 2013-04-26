@@ -28,41 +28,39 @@ import com.osbcp.cssparser.*;
  *
  */
 public class TSSHandler extends NamespaceHandler {
-	private Annotatable mSubject;
-	private Object mValue;
-	private String mPredicate;
 	private List<Rule> mTSSList;
 	private Hashtable mTSSHash;
+    private File mTSSFile;
     private Vector<PropertyValue> treeProperties;
     private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
     private boolean generalSelectorsHaveInitialized = false;
 
-    public TSSHandler(Annotatable annotatable, Annotation annotation) {
-		super(annotatable, annotation);
-        File mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
-		Scanner scanner = null;
-		String cssString = "";
-		try {
-			scanner = new Scanner(mTSSFile);
-		} catch (Exception e) {
-			NexmlMesquiteManager.debug(e.toString());
-		}
-		while (scanner.hasNextLine()){
-			cssString = cssString + scanner.nextLine();
-		}
-		try {
-			mTSSList = CSSParser.parse(cssString);
-		} catch (Exception e) {
-			NexmlMesquiteManager.debug(e.toString());
-		}
-		// store the rules in the hash:
-		mTSSHash = new Hashtable();
-		for ( Rule r : mTSSList) {
-			// we want to hash each rule as a value for each selector key separately.
+    public TSSHandler() {
+        super();
+        mTSSHash = new Hashtable();
+        mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+        Scanner scanner = null;
+        String cssString = "";
+        try {
+            scanner = new Scanner(mTSSFile);
+        } catch (Exception e) {
+            NexmlMesquiteManager.debug(e.toString());
+        }
+        while (scanner.hasNextLine()){
+            cssString = cssString + scanner.nextLine();
+        }
+        try {
+            mTSSList = CSSParser.parse(cssString);
+        } catch (Exception e) {
+            NexmlMesquiteManager.debug(e.toString());
+        }
+        // store the rules in the hash:
+        for ( Rule r : mTSSList) {
+            // we want to hash each rule as a value for each selector key separately.
             List<Selector> selectors = r.getSelectors();
-			List<PropertyValue> pvs = r.getPropertyValues();
-			for (Selector selector : selectors) {
+            List<PropertyValue> pvs = r.getPropertyValues();
+            for (Selector selector : selectors) {
                 String selectorName = selector.toString();
                 String selectorSubClass = "";
 
@@ -92,51 +90,15 @@ public class TSSHandler extends NamespaceHandler {
                 } else {
                     Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
                     if (subClassHash == null) {
-                         subClassHash = new Hashtable();
+                        subClassHash = new Hashtable();
                     }
                     subClassHash.put(selectorSubClass,pvs);
                     mTSSHash.put(selectorName,subClassHash);
                 }
-			}
-		}
+            }
+        }
         parseGeneralSelectors();
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getSubject()
-	 */
-	@Override
-	public
-	Annotatable getSubject() {
-		return mSubject;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setSubject(java.lang.Object)
-	 */
-	@Override
-	public
-	void setSubject(Annotatable subject) {
-		mSubject = subject;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getValue()
-	 */
-	@Override
-	public
-	Object getValue() {
-		return mValue;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setValue(java.lang.Object)
-	 */
-	@Override
-	public
-	void setValue(Object value) {
-		mValue = value;
-	}
+    }
 
 	/* (non-Javadoc)
 	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getPrefix()
@@ -148,50 +110,6 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
 	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setPrefix(java.lang.String)
-	 */
-	@Override
-	public
-	void setPrefix(String prefix) {
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getPredicate()
-	 */
-	@Override
-	public
-	String getPredicate() {
-		return mPredicate;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setPredicate(java.lang.String)
-	 */
-	@Override
-	public
-	void setPredicate(String predicate) {
-		mPredicate = predicate;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getPropertyIsRel()
-	 */
-	@Override
-	public
-	boolean getPropertyIsRel() {
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setPropertyIsRel(boolean)
-	 */
-	@Override
-	public
-	void setPropertyIsRel(boolean propertyIsRel) {
-
-	}
-
-	/* (non-Javadoc)
 	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getURIString()
 	 */
 	@Override
@@ -199,15 +117,6 @@ public class TSSHandler extends NamespaceHandler {
 	String getURIString() {
 		return Constants.TSSURIString;
 	}
-
-	/* (non-Javadoc)
-	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#setURIString(java.lang.String)
-	 */
-	@Override
-	public
-	void setURIString(String uri) {
-	}
-
 
     // parses the general selectors "canvas," "tree," and "scale"
     private void parseGeneralSelectors () {
@@ -294,7 +203,6 @@ public class TSSHandler extends NamespaceHandler {
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
 		String tssClass = parts[1];
-//		Annotatable subj = getSubject();
 		String value = getValue().toString();
         String newValue = mesquiteNodeAnnotation(tssClass, value);
         setValue(newValue);
@@ -302,7 +210,7 @@ public class TSSHandler extends NamespaceHandler {
         Object convertedValue = getValue();
         Object pred = getPredicate();
         if (convertedValue.equals(Constants.NO_RULE)) {
-            MesquiteMessage.warnUser ("couldn't find TSS rule " + pred.toString());
+            MesquiteMessage.discreetNotifyUser ("couldn't find TSS rule " + pred.toString());
             // no rule specified
         } else {
             String[] mesProps = convertedValue.toString().split(";");
@@ -345,7 +253,7 @@ public class TSSHandler extends NamespaceHandler {
             MesquiteMessage.discreetNotifyUser("TSS class "+tssClassName+" not found");
             return null;
         }
-        List<PropertyValue> pvs = null;
+        List<PropertyValue> pvs;
         if (hashvalue.getClass()==Hashtable.class) {
             // check the tssValue to see if it's a string
             pvs = (List)((Hashtable)hashvalue).get(tssValue);
@@ -382,7 +290,7 @@ public class TSSHandler extends NamespaceHandler {
                 String[] split_pvs = pv.getValue().split(" ",2);
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    NexmlMesquiteManager.debug("poorly formed font property, should have [font-style] font-size font-family: "+pv.getValue());
+                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
@@ -391,7 +299,7 @@ public class TSSHandler extends NamespaceHandler {
                 }
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    NexmlMesquiteManager.debug("poorly formed font property, should have [font-style] font-size font-family: "+pv.getValue());
+                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 fontSize = split_pvs[0];

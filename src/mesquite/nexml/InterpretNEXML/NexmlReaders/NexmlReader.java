@@ -104,9 +104,6 @@ public class NexmlReader extends NexmlMesquiteManager {
                 continue;
             }
 			PredicateHandler handler = getNamespaceHandler(xmlAnnotatable,xmlAnnotation);
-			if ( handler == null ) {
-				handler = getPredicateHandler(xmlAnnotatable,xmlAnnotation);
-            }
             handler.read(mesAssociable, mesListable, segmentCount);
         }
 	}

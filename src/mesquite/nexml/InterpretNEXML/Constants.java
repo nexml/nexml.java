@@ -3,7 +3,8 @@ package mesquite.nexml.InterpretNEXML;
 import java.net.URI;
 
 public class Constants {
-	public static final String MESQUITE_NS_PREFIX = "msq";
+    public static final boolean DEBUGGING = true;
+    public static final String MESQUITE_NS_PREFIX = "msq";
 	public static final String MESQUITE_NS_BASE = "http://mesquiteproject.org#";
 	public static final String NRURIString = "http://mesquiteproject.org/namereference#";
 	public static final String BeanURIString = "http://mesquiteproject.org/bean#";

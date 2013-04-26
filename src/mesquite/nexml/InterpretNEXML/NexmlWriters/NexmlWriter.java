@@ -66,9 +66,6 @@ public class NexmlWriter extends NexmlMesquiteManager {
 		}
         Annotation annotation = annotatable.addAnnotationValue(predicate,namespace,value);
 		PredicateHandler handler = getNamespaceHandler(annotatable,annotation);
-		if ( null == handler ) {
-			handler = getPredicateHandler(annotatable,annotation);
-		}
 		if ( null != handler ) {
             handler.write();
 		}
