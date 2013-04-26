@@ -21,9 +21,8 @@ public class NameReferenceHandler extends NamespaceHandler {
 	private String mPredicate;
 	
 	/**
-	 * @param subject
-	 * @param predicate
-	 * @param object
+	 * @param annotatable
+	 * @param annotation
 	 */
 	public NameReferenceHandler(Annotatable annotatable,Annotation annotation) {
 		super(annotatable, annotation);
@@ -159,7 +158,6 @@ public class NameReferenceHandler extends NamespaceHandler {
 		else {
 			associable.setAssociatedObject(nRef, index, value);
 		}	
-		System.out.println("NameReferenceHandler for predicate "+local+" with value "+value);
 	}
 
 	@Override

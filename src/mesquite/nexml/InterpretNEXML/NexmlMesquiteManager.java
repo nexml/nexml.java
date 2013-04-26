@@ -60,8 +60,8 @@ public class NexmlMesquiteManager {
     }
 
 
-    public NamespaceHandler getNamespaceHandler(URI uriString) {
-        if (mNamespaceHandlers == null) {
+    public NamespaceHandler getNamespaceHandlerFromURI(URI uriString) {
+        if ((mNamespaceHandlers == null) || (uriString == null)) {
             return null;
         } else {
             return (NamespaceHandler) mNamespaceHandlers.get(uriString);
@@ -135,8 +135,8 @@ public class NexmlMesquiteManager {
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
 		String handlerClassName = null;
         URI uri = annotation.getPredicateNamespace();
-		NamespaceHandler nh = getNamespaceHandler(uri);
-        debug ("getNamespaceHandler "+uri.toString());
+		NamespaceHandler nh = getNamespaceHandlerFromURI(uri);
+        debug ("getNamespaceHandler "+annotation.toString()+" with property "+annotation.getProperty()+", value "+annotation.getValue()+", uri "+annotation.getPredicateNamespace());
         if (nh != null) {
 			// don't reinstantiate all handlers all the time; if one has already been instantiated,
 			// just update the annotation for the existing handler
@@ -150,12 +150,14 @@ public class NexmlMesquiteManager {
 			}
 			nh.setPredicate(property);
 		} else {
-			for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-				if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
-					handlerClassName = name;
-					break;
-				}
-			}
+            if (uri != null) {
+                for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
+                    if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
+                        handlerClassName = name;
+                        break;
+                    }
+                }
+            }
 			if ( handlerClassName != null ) {
 				try {
 					Class<?> handlerClass = Class.forName(handlerClassName);

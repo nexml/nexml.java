@@ -327,7 +327,7 @@ public class AnnotationImpl extends AnnotatableImpl implements Annotation {
     
     /**
      * Helper method to fill out the boiler plate for atomic literal meta objects
-     * @param datatype schema datatype, i.e. a CURIE such as xsd:string
+     * @param datatypeQName schema datatype, i.e. a CURIE such as xsd:string
      * @param value a marshalled version of the object
      */
     private void setValueAttributes(QName datatypeQName,Object value) {
@@ -545,10 +545,10 @@ public class AnnotationImpl extends AnnotatableImpl implements Annotation {
 		}
 		String[] parts = property.split(":");
 		String prefix = parts[0];
-		if ( ! isEmpty(prefix) ) {
+        if ( ! isEmpty(prefix) ) {
 			Element elt = getElement();
-			String xmlnsAttr = XMLNS_PRE + ":" + prefix;
-			String xmlns = elt.getAttribute(xmlnsAttr); 
+            String xmlnsAttr = XMLNS_PRE + ":" + prefix;
+			String xmlns = elt.getAttribute(xmlnsAttr);
 			while ( isEmpty(xmlns) ) {
 				if ( elt.getParentNode() instanceof Element ) {
 					elt = (Element)elt.getParentNode();
@@ -560,8 +560,13 @@ public class AnnotationImpl extends AnnotatableImpl implements Annotation {
 			}
 			if ( ! isEmpty(xmlns) ) {
 				return URI.create(xmlns);
-			}
+			} else {
+                mesquite.lib.MesquiteMessage.notifyUser("XML namespace "+xmlnsAttr+" wasn't declared.");
+                return null;
+            }
 		}
+        // malformed prefix
+        mesquite.lib.MesquiteMessage.notifyUser("XML property \""+property+"\" was malformed: it should have the form \"XMLNS:property\"");
 		return null;
 	}
 	

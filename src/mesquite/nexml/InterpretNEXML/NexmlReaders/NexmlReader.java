@@ -2,6 +2,7 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.net.URI;
 
 import mesquite.lib.*;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.TSSHandler;
@@ -64,7 +65,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
-        TSSHandler tsshandler = (TSSHandler) getNamespaceHandler(Constants.TSSURI);
+        TSSHandler tsshandler = (TSSHandler) getNamespaceHandlerFromURI(Constants.TSSURI);
         if (tsshandler != null) {
             tsshandler.initializeGeneralSelectors(mesProject);
         }
@@ -98,61 +99,36 @@ public class NexmlReader extends NexmlMesquiteManager {
 	 */
 	protected void readAnnotations(Associable mesAssociable, Annotatable xmlAnnotatable,int segmentCount,Listable mesListable) {
 		for ( Annotation xmlAnnotation : xmlAnnotatable.getAllAnnotations() ) {
+            URI namespace = xmlAnnotation.getPredicateNamespace();
+            if (namespace == null) {
+                MesquiteMessage.discreetNotifyUser("no namespace defined for XML annotation "+xmlAnnotation.getProperty());
+                continue;
+            }
 			PredicateHandler handler = getNamespaceHandler(xmlAnnotatable,xmlAnnotation);
-			if ( null == handler ) {
+			if ( handler == null ) {
 				handler = getPredicateHandler(xmlAnnotatable,xmlAnnotation);
 			}
-			Object convertedValue = handler.getValue();
+            Object convertedValue = handler.getValue();
 			Object pred = handler.getPredicate();
 
  			// Adding annotations for interpreting TSS commands:
 			handler.read(mesAssociable, mesListable, segmentCount);
-			if ( pred.toString().contains("tss:")) {
-//            if (handler instanceof TSSHandler) {
-
-                convertedValue = handler.getValue();
- 				if (convertedValue.equals(Constants.NO_RULE)) {
- 					debug ("couldn't find " + pred.toString());
-					// no rule specified
- 				} else {
-					String[] mesProps = convertedValue.toString().split(";");
-					for (String prop : mesProps) {
-                        if (prop.contains("tss:")) {
-                            String[] propParts = prop.split(":");
-                            String convertedProp = propParts[0];
-                            String convertedVal = propParts[1];
-                            NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
-                            mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
-                            mesAssociable.setAssociatedObject(mesNr,segmentCount, convertedVal);
-                        } else {
-                            String[] propParts = prop.split(":");
-                            String convertedProp = propParts[0];
-                            String convertedVal = propParts[1];
-                            NameReference mesNr = mesAssociable.makeAssociatedObjects(convertedProp);
-                            mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
-                            try {
-                                mesAssociable.setAssociatedLong(mesNr,segmentCount,new Long(convertedVal));
-                            } catch (Exception e) {
-                                mesAssociable.setAssociatedBit(mesNr,segmentCount,Boolean.TRUE);
-                            }
-                        }
-					}
-				}
+            if (handler instanceof TSSHandler) {
  			} else if ( convertedValue instanceof Boolean ) {
 				NameReference mesNr = mesAssociable.makeAssociatedBits(handler.getPredicate());
-				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
+				mesNr.setNamespace(namespace);
 				mesAssociable.setAssociatedBit(mesNr,segmentCount,(Boolean)convertedValue);
 			} else if ( convertedValue instanceof Double ) {
 				NameReference mesNr = mesAssociable.makeAssociatedDoubles(handler.getPredicate());
-				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
+				mesNr.setNamespace(namespace);
 				mesAssociable.setAssociatedDouble(mesNr,segmentCount,(Double)convertedValue);
 			} else if ( convertedValue instanceof Long ) {
 				NameReference mesNr = mesAssociable.makeAssociatedLongs(handler.getPredicate());
-				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
+				mesNr.setNamespace(namespace);
 				mesAssociable.setAssociatedLong(mesNr,segmentCount,(Long)convertedValue);
-			} else if ( convertedValue instanceof Object ) {
+			} else {
 				NameReference mesNr = mesAssociable.makeAssociatedObjects(handler.getPredicate());
-				mesNr.setNamespace(xmlAnnotation.getPredicateNamespace());
+				mesNr.setNamespace(namespace);
 				mesAssociable.setAssociatedObject(mesNr,segmentCount,convertedValue);
 			}
 		}

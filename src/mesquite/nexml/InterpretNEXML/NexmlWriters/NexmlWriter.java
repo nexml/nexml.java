@@ -99,14 +99,14 @@ public class NexmlWriter extends NexmlMesquiteManager {
 			LongArray array = associable.getAssociatedLongs(i);
 			long value = array.getValue(segmentCount);
 			if ( MesquiteLong.unassigned != value  ) {
-				writeAnnotation(array.getNameReference(),annotatable,value);
+                writeAnnotation(array.getNameReference(),annotatable,value);
 			}
 		}
 		
 		int numBits = associable.getNumberAssociatedBits();
 		for ( int i = 0; i < numBits; i++ ){  
-			Bits array = associable.getAssociatedBits(i);			
-			writeAnnotation(array.getNameReference(),annotatable,array.isBitOn(segmentCount));
+			Bits array = associable.getAssociatedBits(i);
+            writeAnnotation(array.getNameReference(),annotatable,array.isBitOn(segmentCount));
 		}	
 		
 		int numObjs = associable.getNumberAssociatedObjects();
@@ -114,7 +114,7 @@ public class NexmlWriter extends NexmlMesquiteManager {
 			ObjectArray array = associable.getAssociatedObjects(i);
 			Object value = array.getValue(segmentCount);
 			if ( null != value ) {
-				writeAnnotation(array.getNameReference(),annotatable,value);
+                writeAnnotation(array.getNameReference(),annotatable,value);
 			}
 		}		
 		

@@ -298,7 +298,36 @@ public class TSSHandler extends NamespaceHandler {
 		String value = getValue().toString();
         String newValue = mesquiteNodeAnnotation(tssClass, value);
         setValue(newValue);
-	}
+
+        Object convertedValue = getValue();
+        Object pred = getPredicate();
+        if (convertedValue.equals(Constants.NO_RULE)) {
+            MesquiteMessage.warnUser ("couldn't find TSS rule " + pred.toString());
+            // no rule specified
+        } else {
+            String[] mesProps = convertedValue.toString().split(";");
+            for (String prop : mesProps) {
+                if (prop.contains("tss:")) {
+                    String[] propParts = prop.split(":");
+                    String convertedProp = propParts[0];
+                    String convertedVal = propParts[1];
+                    NameReference mesNr = associable.makeAssociatedObjects(convertedProp);
+                    associable.setAssociatedObject(mesNr,index, convertedVal);
+                } else {
+                    String[] propParts = prop.split(":");
+                    String convertedProp = propParts[0];
+                    String convertedVal = propParts[1];
+                    NameReference mesNr = associable.makeAssociatedObjects(convertedProp);
+                    try {
+                        associable.setAssociatedLong(mesNr,index,new Long(convertedVal));
+                    } catch (Exception e) {
+                        associable.setAssociatedBit(mesNr,index,Boolean.TRUE);
+                    }
+                }
+            }
+        }
+
+    }
 
 	@Override
 	public
