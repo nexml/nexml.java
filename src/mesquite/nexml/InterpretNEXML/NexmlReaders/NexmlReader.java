@@ -50,7 +50,6 @@ public class NexmlReader extends NexmlMesquiteManager {
 
 			// process tree blocks
 			NexmlTreeBlockReader ntbr = new NexmlTreeBlockReader(getEmployerEmployee());
-			debug("about to read trees...");
 			List<Annotatable> xmlAnnoTreeBlockList = new ArrayList<Annotatable>();
 			for ( TreeBlock xmlTreeBlock : xmlDocument.getTreeBlockList(xmlOTUs) ) {
 				xmlAnnoTreeBlockList.add(xmlTreeBlock);
@@ -107,30 +106,8 @@ public class NexmlReader extends NexmlMesquiteManager {
 			PredicateHandler handler = getNamespaceHandler(xmlAnnotatable,xmlAnnotation);
 			if ( handler == null ) {
 				handler = getPredicateHandler(xmlAnnotatable,xmlAnnotation);
-			}
-            Object convertedValue = handler.getValue();
-			Object pred = handler.getPredicate();
-
- 			// Adding annotations for interpreting TSS commands:
-			handler.read(mesAssociable, mesListable, segmentCount);
-            if (handler instanceof TSSHandler) {
- 			} else if ( convertedValue instanceof Boolean ) {
-				NameReference mesNr = mesAssociable.makeAssociatedBits(handler.getPredicate());
-				mesNr.setNamespace(namespace);
-				mesAssociable.setAssociatedBit(mesNr,segmentCount,(Boolean)convertedValue);
-			} else if ( convertedValue instanceof Double ) {
-				NameReference mesNr = mesAssociable.makeAssociatedDoubles(handler.getPredicate());
-				mesNr.setNamespace(namespace);
-				mesAssociable.setAssociatedDouble(mesNr,segmentCount,(Double)convertedValue);
-			} else if ( convertedValue instanceof Long ) {
-				NameReference mesNr = mesAssociable.makeAssociatedLongs(handler.getPredicate());
-				mesNr.setNamespace(namespace);
-				mesAssociable.setAssociatedLong(mesNr,segmentCount,(Long)convertedValue);
-			} else {
-				NameReference mesNr = mesAssociable.makeAssociatedObjects(handler.getPredicate());
-				mesNr.setNamespace(namespace);
-				mesAssociable.setAssociatedObject(mesNr,segmentCount,convertedValue);
-			}
-		}
+            }
+            handler.read(mesAssociable, mesListable, segmentCount);
+        }
 	}
 }
