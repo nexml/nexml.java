@@ -123,85 +123,6 @@ public class TSSHandler extends NamespaceHandler {
 	String getURIString() {
 		return Constants.TSSURIString;
 	}
-
-    // parses the general selectors "canvas," "tree," and "scale"
-    private void parseGeneralSelectors () {
-        canvasProperties = new Vector<PropertyValue>();
-        treeProperties = new Vector<PropertyValue>();
-        scaleProperties = new Vector<PropertyValue>();
-        List<PropertyValue> pvs = getClass ("canvas", "");
-        if (pvs != null) {
-            for (PropertyValue pv : pvs) {
-                if (pv.getProperty().equalsIgnoreCase("background-color")) {
-                    //Mesquite can only handle setting the color of the canvas. Ignore everything else.
-                    canvasProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
-                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    String fontFamily = chooseAFont(pv.getValue());
-                    canvasProperties.add(new PropertyValue("font-family", fontFamily));
-                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    //convert this value to a point number
-                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
-                    canvasProperties.add(new PropertyValue("font-size", String.valueOf(value)));
-                } else if (pv.getProperty().equalsIgnoreCase("height")) {
-                    //convert this value to a single pixel number
-                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_HEIGHT);
-                    canvasProperties.add(new PropertyValue("height", String.valueOf(value)));
-                } else if (pv.getProperty().equalsIgnoreCase("width")) {
-                    //convert this value to a single pixel number
-                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_WIDTH);
-                    canvasProperties.add(new PropertyValue("width", String.valueOf(value)));
-                }
-            }
-        }
-
-        pvs = getClass ("tree", "");
-        if (pvs != null) {
-            for (PropertyValue pv : pvs) {
-                if (pv.getProperty().equalsIgnoreCase("layout")) {
-                    treeProperties.add(new PropertyValue("layout", "rectangular"));
-                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
-                    treeProperties.add(new PropertyValue("border-width", String.valueOf(value)));
-                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                    treeProperties.add(new PropertyValue("border-color", convertToMesColorNumber(pv.getValue())));
-                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
-                    //this isn't implemented yet
-                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                    treeProperties.add(new PropertyValue("tip-orientation", pv.getValue().toUpperCase()));
-                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
-                    treeProperties.add(new PropertyValue("scaled", pv.getValue()));
-                }
-            }
-        }
-
-        pvs = getClass ("scale", "");
-        /*
-            visible: true|false
-            font-family, font-size, etc.
-            border-color: black;
-            border-size: 1px;
-            border-style: solid;
-            scale-width: value
-            scale-title: “text”   */
-        if (pvs != null) {
-            for (PropertyValue pv : pvs) {
-                if (pv.getProperty().equalsIgnoreCase("layout")) {
-                    scaleProperties.add(new PropertyValue("layout", "rectangular"));
-                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
-                    scaleProperties.add(new PropertyValue("border-width", String.valueOf(value)));
-                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                    scaleProperties.add(new PropertyValue("border-color", convertToMesColorNumber(pv.getValue())));
-                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
-                    //this isn't implemented yet
-                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                    scaleProperties.add(new PropertyValue("tip-orientation", pv.getValue().toUpperCase()));
-                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
-                    scaleProperties.add(new PropertyValue("scaled", pv.getValue()));
-                }
-            }
-        }
-    }
 // This parses the actual xml meta tag for TSS
 // index is the Mesquite node ID
 	@Override
@@ -246,14 +167,126 @@ public class TSSHandler extends NamespaceHandler {
 
     }
 
-	@Override
-	public
-	void write() {
-		// TODO Auto-generated method stub
+    public void initializeMesquiteProject(MesquiteProject project) {
+        if (project == null) {
+            return;
+        }
+        CommandChecker cc = new CommandChecker();
+        BasicFileCoordinator projectCoordinator = (BasicFileCoordinator) project.doCommand("getCoordinatorModule", "", cc);
+        BasicTreeWindowCoord treeWindowCoord = (BasicTreeWindowCoord) projectCoordinator.doCommand("getEmployee", "#mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord", cc);
+        BasicTreeWindowMaker treeWindowMaker = (BasicTreeWindowMaker) treeWindowCoord.doCommand("makeTreeWindow","#mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker",cc);
 
-	}
+        // treeWindow is a Commandable because the BasicTreeWindow class isn't public
+        Commandable treeWindow = (Commandable) treeWindowMaker.doCommand("getTreeWindow", Integer.toString(1), cc);
+        BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
+        BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.StyledSquareTree.StyledSquareTree", cc);
+        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
 
-	private List<PropertyValue> getClass (String tssClassName, String tssValue) {
+
+        treeWindowMaker.doCommand("suppressEPCResponse","",cc);
+        treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
+        nodeLocs.doCommand("toggleCenter","on",cc);
+
+        // tell the treeDrawCoordinator to set canvas settings:
+        if (canvasProperties != null) {
+            Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
+            int width = dim.width;
+            int height = dim.height;
+            String backgroundColor = "White";
+            String fontSize = "10";
+            String fontFamily = "Helvetica";
+            for (PropertyValue pv : canvasProperties) {
+                MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
+                if (pv.getProperty().equalsIgnoreCase("background-color")) {
+                    //set the color to the standard color
+                    backgroundColor = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("width")) {
+                    width = Integer.parseInt(pv.getValue());
+                } else if (pv.getProperty().equalsIgnoreCase("height")) {
+                    height = Integer.parseInt(pv.getValue());
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    fontFamily = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    fontSize = pv.getValue();
+                }
+            }
+            treeWindow.doCommand("setSize", width+" "+height, cc);
+            treeDrawCoordinator.doCommand("setBackground", backgroundColor, cc);
+            taxonNames.doCommand("setFontSize",fontSize,cc);
+            taxonNames.doCommand("setFont",fontFamily,cc);
+        }
+
+
+        if (treeProperties != null) {
+            String tipOrientation = "RIGHT";
+            String borderWidth = "3";
+            String borderColor = "0";
+            String layout = "rectangular";
+            String fontSize = "10";
+            String fontFamily = "Helvetica";
+            boolean scaled = false;
+            for (PropertyValue pv : treeProperties) {
+                MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
+                if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    borderWidth = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    borderColor = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                    tipOrientation = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    fontFamily = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    fontSize = pv.getValue();
+                }
+            }
+            treeDrawer.doCommand("setStemWidth", borderWidth, cc);
+            treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
+            treeDrawer.doCommand("setBranchColor", borderColor, cc);
+
+            if (tipOrientation.equalsIgnoreCase("up")) {
+                treeDrawer.doCommand("orientUP","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("left")) {
+                treeDrawer.doCommand("orientLEFT","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("right")) {
+                treeDrawer.doCommand("orientRIGHT","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("down")) {
+                treeDrawer.doCommand("orientDOWN","",cc);
+            }
+        }
+
+        if (scaleProperties != null) {
+            /*          visible: true|false
+        font-family, font-size, etc.
+        border-color: black;
+        border-size: 1px;
+        border-style: solid;
+        scale-width: value
+        scale-title: ‚Äútext‚Äù   */
+            String scaleVisible;
+            String borderWidth;
+            String borderColor;
+            String fontSize = "10";
+            String fontFamily = "Helvetica";
+            for (PropertyValue pv : scaleProperties) {
+                MesquiteMessage.notifyProgrammer("setting scaleProperty "+pv.toString());
+                if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    borderWidth = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    borderColor = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("visible")) {
+                    scaleVisible = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    fontFamily = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    fontSize = pv.getValue();
+                }
+            }
+        }
+        treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
+    }
+
+    private List<PropertyValue> getClass (String tssClassName, String tssValue) {
 		Object hashvalue = mTSSHash.get(tssClassName);
         if (hashvalue == null) {
             MesquiteMessage.discreetNotifyUser("TSS class "+tssClassName+" not found");
@@ -429,123 +462,81 @@ public class TSSHandler extends NamespaceHandler {
         return mesColor;
     }
 
-    public void initializeGeneralSelectors(MesquiteProject project) {
-        if (project != null) {
-            if (!generalSelectorsHaveInitialized) {
-                generalSelectorsHaveInitialized = true;
-                CommandChecker cc = new CommandChecker();
-                BasicFileCoordinator projectCoordinator = (BasicFileCoordinator) project.doCommand("getCoordinatorModule", "", cc);
-                BasicTreeWindowCoord treeWindowCoord = (BasicTreeWindowCoord) projectCoordinator.doCommand("getEmployee", "#mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord", cc);
-                BasicTreeWindowMaker treeWindowMaker = (BasicTreeWindowMaker) treeWindowCoord.doCommand("makeTreeWindow","#mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker",cc);
-
-                // treeWindow is a Commandable because the BasicTreeWindow class isn't public
-                Commandable treeWindow = (Commandable) treeWindowMaker.doCommand("getTreeWindow", Integer.toString(1), cc);
-                BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
-                BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
-                DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.StyledSquareTree.StyledSquareTree", cc);
-                NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
-
-
-                treeWindowMaker.doCommand("suppressEPCResponse","",cc);
-                treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
-                nodeLocs.doCommand("toggleCenter","on",cc);
-
-                // tell the treeDrawCoordinator to set canvas settings:
-                if (canvasProperties != null) {
-                    Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
-                    int width = dim.width;
-                    int height = dim.height;
-                    String backgroundColor = "White";
-                    String fontSize = "10";
-                    String fontFamily = "Helvetica";
-                    for (PropertyValue pv : canvasProperties) {
-                        MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
-                        if (pv.getProperty().equalsIgnoreCase("background-color")) {
-                            //set the color to the standard color
-                            backgroundColor = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("width")) {
-                            width = Integer.parseInt(pv.getValue());
-                        } else if (pv.getProperty().equalsIgnoreCase("height")) {
-                            height = Integer.parseInt(pv.getValue());
-                        } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                            fontFamily = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                            fontSize = pv.getValue();
-                        }
-                    }
-                    treeWindow.doCommand("setSize", width+" "+height, cc);
-                    treeDrawCoordinator.doCommand("setBackground", backgroundColor, cc);
-                    taxonNames.doCommand("setFontSize",fontSize,cc);
-                    taxonNames.doCommand("setFont",fontFamily,cc);
+    //    parses the general selectors "canvas," "tree," and "scale"
+    private void parseGeneralSelectors () {
+        canvasProperties = new Vector<PropertyValue>();
+        treeProperties = new Vector<PropertyValue>();
+        scaleProperties = new Vector<PropertyValue>();
+        List<PropertyValue> pvs = getClass ("canvas", "");
+        if (pvs != null) {
+            for (PropertyValue pv : pvs) {
+                if (pv.getProperty().equalsIgnoreCase("background-color")) {
+                    //Mesquite can only handle setting the color of the canvas. Ignore everything else.
+                    canvasProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    String fontFamily = chooseAFont(pv.getValue());
+                    canvasProperties.add(new PropertyValue("font-family", fontFamily));
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    //convert this value to a point number
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
+                    canvasProperties.add(new PropertyValue("font-size", String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("height")) {
+                    //convert this value to a single pixel number
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_HEIGHT);
+                    canvasProperties.add(new PropertyValue("height", String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("width")) {
+                    //convert this value to a single pixel number
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_WIDTH);
+                    canvasProperties.add(new PropertyValue("width", String.valueOf(value)));
                 }
+            }
+        }
 
-
-                if (treeProperties != null) {
-                    String tipOrientation = "RIGHT";
-                    String borderWidth = "3";
-                    String borderColor = "0";
-                    String layout = "rectangular";
-                    String fontSize = "10";
-                    String fontFamily = "Helvetica";
-                    boolean scaled = false;
-                    for (PropertyValue pv : treeProperties) {
-                        MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
-                        if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                            borderWidth = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                            borderColor = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                            tipOrientation = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                            fontFamily = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                            fontSize = pv.getValue();
-                        }
-                    }
-                    treeDrawer.doCommand("setStemWidth", borderWidth, cc);
-                    treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
-                    treeDrawer.doCommand("setBranchColor", borderColor, cc);
-
-                    if (tipOrientation.equalsIgnoreCase("up")) {
-                        treeDrawer.doCommand("orientUP","",cc);
-                    } else if (tipOrientation.equalsIgnoreCase("left")) {
-                        treeDrawer.doCommand("orientLEFT","",cc);
-                    } else if (tipOrientation.equalsIgnoreCase("right")) {
-                        treeDrawer.doCommand("orientRIGHT","",cc);
-                    } else if (tipOrientation.equalsIgnoreCase("down")) {
-                        treeDrawer.doCommand("orientDOWN","",cc);
-                    }
+        pvs = getClass ("tree", "");
+        if (pvs != null) {
+            for (PropertyValue pv : pvs) {
+                if (pv.getProperty().equalsIgnoreCase("layout")) {
+                    treeProperties.add(new PropertyValue("layout", "rectangular"));
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
+                    treeProperties.add(new PropertyValue("border-width", String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    treeProperties.add(new PropertyValue("border-color", convertToMesColorNumber(pv.getValue())));
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                    treeProperties.add(new PropertyValue("tip-orientation", pv.getValue().toUpperCase()));
+                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
+                    treeProperties.add(new PropertyValue("scaled", pv.getValue()));
                 }
+            }
+        }
 
-                if (scaleProperties != null) {
-        /*          visible: true|false
-                    font-family, font-size, etc.
-                    border-color: black;
-                    border-size: 1px;
-                    border-style: solid;
-                    scale-width: value
-                    scale-title: ‚Äútext‚Äù   */
-                    String scaleVisible;
-                    String borderWidth;
-                    String borderColor;
-                    String fontSize = "10";
-                    String fontFamily = "Helvetica";
-                    for (PropertyValue pv : scaleProperties) {
-                        MesquiteMessage.notifyProgrammer("setting scaleProperty "+pv.toString());
-                        if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                            borderWidth = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                            borderColor = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("visible")) {
-                            scaleVisible = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                            fontFamily = pv.getValue();
-                        } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                            fontSize = pv.getValue();
-                        }
-                    }
+        pvs = getClass ("scale", "");
+        /*
+            visible: true|false
+            font-family, font-size, etc.
+            border-color: black;
+            border-size: 1px;
+            border-style: solid;
+            scale-width: value
+            scale-title: “text”   */
+        if (pvs != null) {
+            for (PropertyValue pv : pvs) {
+                if (pv.getProperty().equalsIgnoreCase("layout")) {
+                    scaleProperties.add(new PropertyValue("layout", "rectangular"));
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
+                    scaleProperties.add(new PropertyValue("border-width", String.valueOf(value)));
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                    scaleProperties.add(new PropertyValue("border-color", convertToMesColorNumber(pv.getValue())));
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
+                    scaleProperties.add(new PropertyValue("tip-orientation", pv.getValue().toUpperCase()));
+                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
+                    scaleProperties.add(new PropertyValue("scaled", pv.getValue()));
                 }
-                treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
             }
         }
     }
