@@ -39,7 +39,13 @@ public class TSSHandler extends NamespaceHandler {
     public TSSHandler() {
         super();
         mTSSHash = new Hashtable();
-        mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+        try {
+            mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+        } catch (Exception e) {
+            if (e instanceof FileNotFoundException) {
+                MesquiteMessage.discreetNotifyUser("This XML file uses TSS notation, but no TSS file was found.");
+            }
+        }
         Scanner scanner = null;
         String cssString = "";
         try {
