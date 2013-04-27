@@ -7,7 +7,6 @@ import org.nexml.model.OTUs;
 import org.nexml.model.OTUsLinkable;
 import org.nexml.model.Segmented;
 
-import mesquite.lib.Attachable;
 import mesquite.lib.EmployerEmployee;
 import mesquite.lib.FileElement;
 import mesquite.lib.Listable;
@@ -26,9 +25,11 @@ public abstract class NexmlBlockReader extends NexmlReader {
 
 	/**
 	 *
-	 * @param xmlProject
-	 * @param mesBlock
-	 * @return
+	 * @param mesProject
+	 * @param mesFile
+     * @param xmlAnnotatable
+     * @param xmlOTUs
+     * @return
 	 */
 	protected abstract FileElement readBlock(MesquiteProject mesProject, MesquiteFile mesFile, Annotatable xmlAnnotatable, OTUs xmlOTUs);
 

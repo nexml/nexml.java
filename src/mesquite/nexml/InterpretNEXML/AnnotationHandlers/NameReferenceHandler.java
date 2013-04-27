@@ -5,6 +5,7 @@ package mesquite.nexml.InterpretNEXML.AnnotationHandlers;
 
 import mesquite.lib.Associable;
 import mesquite.lib.Listable;
+import mesquite.lib.MesquiteProject;
 import mesquite.lib.NameReference;
 import mesquite.nexml.InterpretNEXML.Constants;
 
@@ -51,11 +52,4 @@ public class NameReferenceHandler extends NamespaceHandler {
 			associable.setAssociatedObject(nRef, index, value);
 		}	
 	}
-
-	@Override
-	public void write() {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

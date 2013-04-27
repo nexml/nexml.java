@@ -131,12 +131,4 @@ public class PredicateHandlerImpl extends PredicateHandler {
 			mesAssociable.setAssociatedObject(mesNr,index,convertedValue);
 		}		
 	}
-
-	@Override
-	public
-	void write() {
-		// TODO Auto-generated method stub
-		
-	}
-	
 }
