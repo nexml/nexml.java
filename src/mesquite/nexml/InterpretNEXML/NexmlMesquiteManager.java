@@ -3,6 +3,7 @@ package mesquite.nexml.InterpretNEXML;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URI;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Hashtable;
@@ -33,15 +34,17 @@ public class NexmlMesquiteManager {
 	 */
 	public NexmlMesquiteManager (EmployerEmployee employerEmployee) {
 		mEmployerEmployee = employerEmployee;
-		mPredicateHandlerMapping = new Properties();
-		mNamespaceHandlerMapping = new Properties();
-        mNamespaceHandlers = new Hashtable();
+        mPredicateHandlerMapping = new Properties();
+        mNamespaceHandlerMapping = new Properties();
+        if (mNamespaceHandlers == null) {
+            mNamespaceHandlers = new Hashtable();
+        }
         try {
-	    	mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
-	    	mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
-	    } catch (IOException e) {
-	    	e.printStackTrace();
-	    }
+            mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
+            mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	}
 
 	/**
@@ -110,12 +113,16 @@ public class NexmlMesquiteManager {
         }
         return null;
 	}
-    protected void setNamespaceHandler(URI uriString, NamespaceHandler nh) {
-        mNamespaceHandlers.put(uriString, nh);
+
+    protected boolean isNamespaceHandlerActive(URI uri) {
+        if (uri == null) {
+            return false;
+        }
+        return mNamespaceHandlers.containsKey(uri);
     }
 
-    protected void resetNamespaceHandlers() {
-        mNamespaceHandlers = new Hashtable();
+    protected Enumeration<String> getActiveNamespaceHandlers() {
+        return mNamespaceHandlers.keys();
     }
 
     protected NamespaceHandler getNamespaceHandlerFromURI(URI uri) {
@@ -123,7 +130,7 @@ public class NexmlMesquiteManager {
             return null;
         }
         NamespaceHandler nh;
-        nh = (NamespaceHandler) mNamespaceHandlers.get(uri.toString()); // look for existing NamespaceHandler
+        nh = (NamespaceHandler) mNamespaceHandlers.get(uri); // look for existing NamespaceHandler
         if (nh == null)  {  // if there isn't one yet, see if we can make one from the mappings we know about
             String handlerClassName;
             for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
@@ -143,6 +150,14 @@ public class NexmlMesquiteManager {
             }
         }
         return nh;
+    }
+
+    protected void setNamespaceHandler(URI uri, NamespaceHandler nh) {
+        mNamespaceHandlers.put(uri, nh);
+    }
+
+    protected void resetNamespaceHandlers() {
+        mNamespaceHandlers = new Hashtable();
     }
     /**
 	 *
