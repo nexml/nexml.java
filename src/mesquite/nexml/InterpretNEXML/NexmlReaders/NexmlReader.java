@@ -2,14 +2,15 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Enumeration;
 import java.net.URI;
+import java.lang.reflect.Method;
 
+import com.sun.tools.example.debug.bdi.MethodNotFoundException;
 import mesquite.lib.*;
-import mesquite.nexml.InterpretNEXML.AnnotationHandlers.TSSHandler;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
-import mesquite.nexml.InterpretNEXML.Constants;
 
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
@@ -64,9 +65,28 @@ public class NexmlReader extends NexmlMesquiteManager {
 			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
-        TSSHandler tsshandler = (TSSHandler) getNamespaceHandlerFromURI(Constants.TSSURI);
-        if (tsshandler != null) {
-            tsshandler.initializeGeneralSelectors(mesProject);
+        for (Enumeration nhEnumeration = getActiveNamespaceHandlers(); nhEnumeration.hasMoreElements() ;) {
+            URI uri = (URI) nhEnumeration.nextElement();
+            PredicateHandler handler = getNamespaceHandlerFromURI(uri);
+            Method method = null;
+            Class[] args = new Class[1];
+            args[0] = MesquiteProject.class;
+            try {
+                method = handler.getClass().getMethod("initializeMesquiteProject", args);
+            } catch (Exception e) {
+                if (!(e instanceof MethodNotFoundException)) {
+                    e.printStackTrace();
+                } else {
+                    debug("tried to initializeMesquiteProject on class "+handler.getClass().toString());
+                }
+            }
+            if (method != null) {
+                try {
+                    method.invoke(handler, mesProject);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return mesProject;
 	}
