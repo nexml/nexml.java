@@ -24,7 +24,7 @@ public class NexmlMesquiteManager {
 	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
 
-	private static Hashtable mNamespaceHandlers;
+	private static Hashtable mActiveNamespaceHandlers;
 
 	private EmployerEmployee mEmployerEmployee;
 
@@ -36,8 +36,8 @@ public class NexmlMesquiteManager {
 		mEmployerEmployee = employerEmployee;
         mPredicateHandlerMapping = new Properties();
         mNamespaceHandlerMapping = new Properties();
-        if (mNamespaceHandlers == null) {
-            mNamespaceHandlers = new Hashtable();
+        if (mActiveNamespaceHandlers == null) {
+            mActiveNamespaceHandlers = new Hashtable();
         }
         try {
             mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
@@ -90,10 +90,9 @@ public class NexmlMesquiteManager {
      * @return
 	 */
 	protected PredicateHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
-        URI uri = annotation.getPredicateNamespace();
-		PredicateHandler ph = getNamespaceHandlerFromURI(uri);
+		PredicateHandler ph = getNamespaceHandlerFromURI(annotation.getPredicateNamespace());
         if (ph == null) { // couldn't find a declared namespace, so find a predicate handler
-            debug ("XML namespace "+uri+" for annotation "+annotation.getProperty()+" can't be found, using a local predicate handler instead.");
+            debug ("XML namespace "+annotation.getPredicateNamespace()+" for annotation "+annotation.getProperty()+" can't be found, using a local predicate handler instead.");
             String predicate = getLocalProperty(annotation);
             String handlerClassName = mPredicateHandlerMapping.getProperty(predicate);
             if ( handlerClassName != null ) { // there is a mapped predicate handler
@@ -114,50 +113,64 @@ public class NexmlMesquiteManager {
         return null;
 	}
 
-    protected boolean isNamespaceHandlerActive(URI uri) {
-        if (uri == null) {
-            return false;
-        }
-        return mNamespaceHandlers.containsKey(uri);
-    }
-
-    protected Enumeration<String> getActiveNamespaceHandlers() {
-        return mNamespaceHandlers.keys();
-    }
-
     protected NamespaceHandler getNamespaceHandlerFromURI(URI uri) {
         if (uri == null) {
             return null;
         }
-        NamespaceHandler nh;
-        nh = (NamespaceHandler) mNamespaceHandlers.get(uri); // look for existing NamespaceHandler
+        NamespaceHandler nh = getActiveNamespaceHandler(uri); // look for existing NamespaceHandler
         if (nh == null)  {  // if there isn't one yet, see if we can make one from the mappings we know about
-            String handlerClassName;
-            for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-                if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
-                    handlerClassName = name;
-                    if ( handlerClassName != null ) {
-                        try {
-                            Class<?> handlerClass = Class.forName(handlerClassName);
-                            Constructor<?> declaredConstructor = handlerClass.getConstructor();
-                            nh = (NamespaceHandler) declaredConstructor.newInstance();
-                            setNamespaceHandler(uri, nh);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
+            Class<?> handlerClass = findNamespaceHandlerClass(uri);
+            if (handlerClass != null) {
+                try {
+                    Constructor<?> declaredConstructor = handlerClass.getConstructor();
+                    nh = (NamespaceHandler) declaredConstructor.newInstance();
+                    addActiveNamespaceHandler(uri, nh);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
         return nh;
     }
-
-    protected void setNamespaceHandler(URI uri, NamespaceHandler nh) {
-        mNamespaceHandlers.put(uri, nh);
+    protected Class<?> findNamespaceHandlerClass (URI uri) {
+        Class<?> handlerClass = null;
+        for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
+            if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
+                try {
+                    handlerClass = Class.forName(name);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+        return handlerClass;
     }
 
-    protected void resetNamespaceHandlers() {
-        mNamespaceHandlers = new Hashtable();
+    protected boolean isNamespaceHandlerActive(URI uri) {
+        if (uri == null) {
+            return false;
+        }
+        return mActiveNamespaceHandlers.containsKey(uri);
+    }
+
+    protected Enumeration<URI> getActiveNamespaceHandlers() {
+        return mActiveNamespaceHandlers.keys();
+    }
+
+    protected void addActiveNamespaceHandler(URI uri, NamespaceHandler nh) {
+        mActiveNamespaceHandlers.put(uri, nh);
+    }
+
+    protected NamespaceHandler getActiveNamespaceHandler (URI uri) {
+        if (uri == null) {
+            return null;
+        }
+        return (NamespaceHandler) mActiveNamespaceHandlers.get(uri);
+    }
+
+    protected void resetActiveNamespaceHandlers() {
+        mActiveNamespaceHandlers = new Hashtable();
     }
     /**
 	 *

@@ -6,7 +6,6 @@ import java.util.Enumeration;
 import java.net.URI;
 import java.lang.reflect.Method;
 
-import com.sun.tools.example.debug.bdi.MethodNotFoundException;
 import mesquite.lib.*;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
@@ -36,7 +35,7 @@ public class NexmlReader extends NexmlMesquiteManager {
 	 * @return
 	 */
 	public MesquiteProject fillProjectFromNexml(Document xmlDocument,MesquiteProject mesProject) {
-        resetNamespaceHandlers();
+        resetActiveNamespaceHandlers();
 		List<OTUs> xmlOTUsList = xmlDocument.getOTUsList();
 		MesquiteFile mesFile = mesProject.getFile(0);
 		// process taxa blocks
@@ -77,7 +76,7 @@ public class NexmlReader extends NexmlMesquiteManager {
                 if (!(e instanceof NoSuchMethodException)) {
                     e.printStackTrace();
                 } else {
-                    debug("tried to initializeMesquiteProject on class "+handler.getClass().toString());
+                    debug("No method initializeMesquiteProject available for "+handler.getClass().toString()+".");
                 }
             }
             if (method != null) {

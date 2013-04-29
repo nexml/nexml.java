@@ -8,25 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import mesquite.lib.*;
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
 import org.nexml.model.Document;
 import org.nexml.model.DocumentFactory;
-import mesquite.lib.Associable;
-import mesquite.lib.Attachable;
-import mesquite.lib.Bits;
-import mesquite.lib.DoubleArray;
-import mesquite.lib.EmployerEmployee;
-import mesquite.lib.FileElement;
-import mesquite.lib.Listable;
-import mesquite.lib.ListableVector;
-import mesquite.lib.LongArray;
-import mesquite.lib.MesquiteDouble;
-import mesquite.lib.MesquiteLong;
-import mesquite.lib.MesquiteProject;
-import mesquite.lib.NameReference;
-import mesquite.lib.ObjectArray;
-import mesquite.lib.TreeVector;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
 import mesquite.nexml.InterpretNEXML.Constants;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
@@ -51,25 +37,30 @@ public class NexmlWriter extends NexmlMesquiteManager {
 	private void writeAnnotation(NameReference nr,Annotatable annotatable,Object value) {
 		URI namespace = nr.getNamespace();
 		String predicate = nr.getName();
-        if ( null == namespace ) {
-            if (nr.toString().contains(Constants.TSSPrefix)) {
-                namespace = URI.create(Constants.TSSURIString);
-                if (value.toString().equals(Constants.NO_VALUE)) {
-                    value = "";
+        Class<?> handlerClass = null;
+        if ( namespace == null ) {
+            String[] predParts = predicate.split(":",2);
+            if (predParts.length > 1) {
+                // look for a namespace that matches the prefix:
+                namespace = URI.create(Constants.BaseURIString.replace("#","/"+predParts[0]+"#"));
+                handlerClass = findNamespaceHandlerClass(namespace);
+                if (handlerClass == null) {
+                    // there isn't a known handler namespace for this prefix, so use the default namereference namespace.
+                    namespace = Constants.BaseURI;
+                    MesquiteMessage.discreetNotifyUser("No known namespace was found for the prefix "+predParts[0]+", using base URI "+namespace+" instead.");
                 }
             } else {
+                // there wasn't a prefix, so use the default prefix.
+                predicate = Constants.NRPrefix + ":" + predicate;
                 namespace = URI.create(Constants.NRURIString);
-                if ( !predicate.contains(":")) {
-                    predicate = Constants.NRPrefix + ":" + nr.getName();
-                }
             }
 		}
-        Annotation annotation = annotatable.addAnnotationValue(predicate,namespace,value);
-		PredicateHandler handler = getNamespaceHandler(annotatable,annotation);
+        PredicateHandler handler = getNamespaceHandlerFromURI(namespace);
 		if ( null != handler ) {
             handler.write();
 		}
-	}
+        annotatable.addAnnotationValue(predicate,namespace,value);
+    }
 	
 	/**
 	 * 
