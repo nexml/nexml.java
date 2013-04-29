@@ -560,13 +560,9 @@ public class AnnotationImpl extends AnnotatableImpl implements Annotation {
 			}
 			if ( ! isEmpty(xmlns) ) {
 				return URI.create(xmlns);
-			} else {
-                mesquite.lib.MesquiteMessage.notifyUser("XML namespace "+xmlnsAttr+" wasn't declared.");
-                return null;
             }
 		}
         // malformed prefix
-        mesquite.lib.MesquiteMessage.notifyUser("XML property \""+property+"\" was malformed: it should have the form \"XMLNS:property\"");
 		return null;
 	}
 	
