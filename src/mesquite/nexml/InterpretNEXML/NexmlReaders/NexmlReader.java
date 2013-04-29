@@ -74,7 +74,7 @@ public class NexmlReader extends NexmlMesquiteManager {
             try {
                 method = handler.getClass().getMethod("initializeMesquiteProject", args);
             } catch (Exception e) {
-                if (!(e instanceof MethodNotFoundException)) {
+                if (!(e instanceof NoSuchMethodException)) {
                     e.printStackTrace();
                 } else {
                     debug("tried to initializeMesquiteProject on class "+handler.getClass().toString());
