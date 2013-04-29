@@ -5,6 +5,7 @@ import java.net.URI;
 import mesquite.lib.Associable;
 import mesquite.lib.Listable;
 
+import mesquite.lib.MesquiteProject;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
@@ -57,6 +58,10 @@ public abstract class PredicateHandler {
 	public void setURI (URI uri) {
 		setURIString(uri.toString());
 	}
+
+    public void initializeMesquiteProject(MesquiteProject project) {
+    }
+
     public void read(Associable associable,Listable listable,int index) {
 
     }
