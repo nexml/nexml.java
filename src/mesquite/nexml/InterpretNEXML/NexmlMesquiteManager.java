@@ -5,64 +5,58 @@ import java.lang.reflect.Constructor;
 import java.util.Properties;
 import java.util.Set;
 
+import mesquite.lib.*;
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
 import org.nexml.model.Document;
 import org.nexml.model.OTU;
 import org.nexml.model.OTUs;
 
-import mesquite.lib.EmployerEmployee;
-import mesquite.lib.ListableVector;
-import mesquite.lib.MesquiteProject;
-import mesquite.lib.Taxa;
-import mesquite.lib.Taxon;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.NamespaceHandler;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandlerImpl;
 
 public class NexmlMesquiteManager {
-	private static boolean debugging = true;
-	
-	private Properties mPredicateHandlerMapping;	
+	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
-	
+
 	private EmployerEmployee mEmployerEmployee;
-	
+
 	/**
-	 * 
+	 *
 	 * @param employerEmployee
 	 */
-	public NexmlMesquiteManager (EmployerEmployee employerEmployee) { 
+	public NexmlMesquiteManager (EmployerEmployee employerEmployee) {
 		mEmployerEmployee = employerEmployee;
-		mPredicateHandlerMapping = new Properties();
-		mNamespaceHandlerMapping = new Properties();
-	    try {
-	    	mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
-	    	mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
-	    } catch (IOException e) {
-	    	e.printStackTrace();
-	    }
+        mPredicateHandlerMapping = new Properties();
+        mNamespaceHandlerMapping = new Properties();
+        try {
+            mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
+            mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return
 	 */
 	protected EmployerEmployee getEmployerEmployee() {
 		return mEmployerEmployee;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param s
 	 */
 	public static void debug(String s) {
-		if (debugging)
+		if (Constants.DEBUGGING)
 			mesquite.lib.MesquiteMessage.notifyProgrammer(s);
-	}	
-	
+	}
+
 	/**
-	 * 
+	 *
 	 * @param annotation
 	 * @return
 	 */
@@ -70,14 +64,18 @@ public class NexmlMesquiteManager {
 		String property = annotation.getProperty();
 		if ( property.equals("") ) {
 			property = annotation.getRel();
-		}			
+		}
 		String[] curie = property.split(":");
-		String localProperty = curie[1]; // NameReference;	lookup in properties		
-		return localProperty;
+        if (curie.length > 1) {
+            return curie[1]; // NameReference;	lookup in properties
+        } else {
+            MesquiteMessage.discreetNotifyUser("Malformed local XML property "+property);
+            return "";
+        }
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param subject
 	 * @param predicate
 	 * @param value
@@ -91,7 +89,7 @@ public class NexmlMesquiteManager {
 			try {
 				Class<?> handlerClass = Class.forName(handlerClassName);
 				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);	
+				ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -101,11 +99,12 @@ public class NexmlMesquiteManager {
 		}
 		debug("Using predicateHandler " + ph.toString());
 		return ph;
-	}	
-	
+	}
+
 	/**
-	 * 
-	 * @param uri
+	 *
+	 * @param annotatable
+	 * @param annotation
 	 * @return
 	 */
 	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
@@ -121,10 +120,10 @@ public class NexmlMesquiteManager {
 			try {
 				Class<?> handlerClass = Class.forName(handlerClassName);
 				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);	
+				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);
 			} catch (Exception e) {
 				e.printStackTrace();
-			}			
+			}
 		}
 		if ( null == nh ) {
 			debug("no namespace handler");
@@ -134,9 +133,9 @@ public class NexmlMesquiteManager {
 		}
 		return nh;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesTaxa
 	 * @param xmlProject
 	 * @return
@@ -150,9 +149,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesTaxon
 	 * @param xmlTaxa
 	 * @return
@@ -164,12 +163,12 @@ public class NexmlMesquiteManager {
 			if ( msqUIDs.contains(mesTaxonIndex) ) {
 				return xmlTaxon;
 			}
-		}		
+		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlOTUs
 	 * @param mesProject
 	 * @return
@@ -185,9 +184,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlOTU
 	 * @param mesTaxa
 	 * @return
@@ -202,5 +201,5 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 }
