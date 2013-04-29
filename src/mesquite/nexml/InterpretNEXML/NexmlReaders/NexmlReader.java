@@ -2,7 +2,10 @@ package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Enumeration;
 import java.net.URI;
+import java.lang.reflect.Method;
+
 import mesquite.lib.*;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.AnnotationWrapper;
@@ -15,36 +18,36 @@ import org.nexml.model.Matrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
 
-public class NexmlReader extends NexmlMesquiteManager {	
-		
+public class NexmlReader extends NexmlMesquiteManager {
 	/**
-	 * 
+	 *
 	 * @param employerEmployee
 	 */
-	public NexmlReader (EmployerEmployee employerEmployee) { 
+	public NexmlReader (EmployerEmployee employerEmployee) {
 		super(employerEmployee);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlDocument
 	 * @param mesProject
 	 * @return
 	 */
 	public MesquiteProject fillProjectFromNexml(Document xmlDocument,MesquiteProject mesProject) {
+        resetActiveNamespaceHandlers();
 		List<OTUs> xmlOTUsList = xmlDocument.getOTUsList();
 		MesquiteFile mesFile = mesProject.getFile(0);
-		
+
 		// process taxa blocks
-		NexmlOTUsBlockReader nobr = new NexmlOTUsBlockReader(getEmployerEmployee());		
+		NexmlOTUsBlockReader nobr = new NexmlOTUsBlockReader(getEmployerEmployee());
 		List<Annotatable> xmlAnnoOTUsList = new ArrayList<Annotatable>();
 		for ( OTUs xmlOTUs : xmlDocument.getOTUsList() ) {
 			xmlAnnoOTUsList.add(xmlOTUs);
 		}
 		nobr.readBlocks(mesProject, mesFile, xmlAnnoOTUsList);
-		
+
 		for ( OTUs xmlOTUs : xmlOTUsList ) {
-			
+
 			// process tree blocks
 			NexmlTreeBlockReader ntbr = new NexmlTreeBlockReader(getEmployerEmployee());
 			List<Annotatable> xmlAnnoTreeBlockList = new ArrayList<Annotatable>();
@@ -57,15 +60,38 @@ public class NexmlReader extends NexmlMesquiteManager {
 			NexmlCharactersBlockReader ncbr = new NexmlCharactersBlockReader(getEmployerEmployee());
 			List<Annotatable> xmlCharactersBlockList = new ArrayList<Annotatable>();
 			for ( Matrix<?> xmlMatrix : xmlDocument.getMatrices(xmlOTUs) ) {
-				xmlCharactersBlockList.add(xmlMatrix);				
-			}			
+				xmlCharactersBlockList.add(xmlMatrix);
+			}
 			ncbr.readBlocks(mesProject, mesFile, xmlCharactersBlockList);
 		}
-		return mesProject;
-	}	
-	
+        for (Enumeration nhEnumeration = getActiveNamespaceHandlers(); nhEnumeration.hasMoreElements() ;) {
+            URI uri = (URI) nhEnumeration.nextElement();
+            PredicateHandler handler = getNamespaceHandlerFromURI(uri);
+            Method method = null;
+            Class[] args = new Class[1];
+            args[0] = MesquiteProject.class;
+            try {
+                method = handler.getClass().getMethod("initializeMesquiteProject", args);
+            } catch (Exception e) {
+                if (!(e instanceof NoSuchMethodException)) {
+                    e.printStackTrace();
+                } else {
+                    debug("No method initializeMesquiteProject available for "+handler.getClass().toString()+".");
+                }
+            }
+            if (method != null) {
+                try {
+                    method.invoke(handler, mesProject);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return mesProject;
+	}
+
 	/**
-	 * 
+	 *
 	 * @param mesAttachable
 	 * @param mesAnnotatable
 	 */
