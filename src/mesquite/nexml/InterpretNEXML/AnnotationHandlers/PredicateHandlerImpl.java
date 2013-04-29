@@ -15,10 +15,12 @@ public class PredicateHandlerImpl extends PredicateHandler {
 	private String mProperty;
 	private Annotatable mSubject;
 
-	public PredicateHandlerImpl(Annotatable annotatable, Annotation annotation) {
+    public PredicateHandlerImpl() {}
+
+    public PredicateHandlerImpl(Annotatable annotatable, Annotation annotation) {
 		super(annotatable, annotation);
 	}
-	
+
 	@Override
 	public
 	void setPredicate(String predicate) {
@@ -31,11 +33,6 @@ public class PredicateHandlerImpl extends PredicateHandler {
 		return mPredicate;
 	}
 
-	@Override
-	public
-	void setPrefix(String prefix) {
-	}		
-	
 	@Override
 	public
 	String getPrefix() {
@@ -134,12 +131,4 @@ public class PredicateHandlerImpl extends PredicateHandler {
 			mesAssociable.setAssociatedObject(mesNr,index,convertedValue);
 		}		
 	}
-
-	@Override
-	public
-	void write() {
-		// TODO Auto-generated method stub
-		
-	}
-	
 }
