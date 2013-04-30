@@ -193,93 +193,83 @@ public class TSSHandler extends NamespaceHandler {
             Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
             int width = dim.width;
             int height = dim.height;
-            String backgroundColor = "White";
-            String fontSize = "10";
-            String fontFamily = "Helvetica";
             for (PropertyValue pv : canvasProperties) {
                 MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
                 if (pv.getProperty().equalsIgnoreCase("background-color")) {
                     //set the color to the standard color
-                    backgroundColor = pv.getValue();
+					treeDrawCoordinator.doCommand("setBackground", pv.getValue(), cc);
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+					taxonNames.doCommand("setFont",pv.getValue(),cc);
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+					taxonNames.doCommand("setFontSize",pv.getValue(),cc);
                 } else if (pv.getProperty().equalsIgnoreCase("width")) {
                     width = Integer.parseInt(pv.getValue());
                 } else if (pv.getProperty().equalsIgnoreCase("height")) {
                     height = Integer.parseInt(pv.getValue());
-                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    fontFamily = pv.getValue();
-                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    fontSize = pv.getValue();
                 }
             }
             treeWindow.doCommand("setSize", width+" "+height, cc);
-            treeDrawCoordinator.doCommand("setBackground", backgroundColor, cc);
-            taxonNames.doCommand("setFontSize",fontSize,cc);
-            taxonNames.doCommand("setFont",fontFamily,cc);
         }
 
-
         if (treeProperties != null) {
-            String tipOrientation = "RIGHT";
-            String borderWidth = "3";
-            String borderColor = "0";
-            String layout = "rectangular";
-            String fontSize = "10";
-            String fontFamily = "Helvetica";
-            boolean scaled = false;
             for (PropertyValue pv : treeProperties) {
-                MesquiteMessage.notifyProgrammer("setting treeProperty "+pv.toString());
-                if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                    borderWidth = pv.getValue();
+                if (pv.getProperty().equalsIgnoreCase("layout")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                    String borderWidth = pv.getValue();
+					treeDrawer.doCommand("setStemWidth", borderWidth, cc);
+					treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
                 } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                    borderColor = pv.getValue();
+					treeDrawer.doCommand("setBranchColor", pv.getValue(), cc);
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                	// this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
+                	if (pv.getValue().equalsIgnoreCase("true")) {
+						nodeLocs.doCommand("branchLengthsToggle", "on", cc);
+					} else {
+						nodeLocs.doCommand("branchLengthsToggle", "off", cc);
+					}
                 } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                    tipOrientation = pv.getValue();
-                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    fontFamily = pv.getValue();
-                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    fontSize = pv.getValue();
+                    String tipOrientation = pv.getValue();
+					if (tipOrientation.equalsIgnoreCase("up")) {
+						treeDrawer.doCommand("orientUP","",cc);
+					} else if (tipOrientation.equalsIgnoreCase("left")) {
+						treeDrawer.doCommand("orientLEFT","",cc);
+					} else if (tipOrientation.equalsIgnoreCase("right")) {
+						treeDrawer.doCommand("orientRIGHT","",cc);
+					} else if (tipOrientation.equalsIgnoreCase("down")) {
+						treeDrawer.doCommand("orientDOWN","",cc);
+					}
                 }
-            }
-            treeDrawer.doCommand("setStemWidth", borderWidth, cc);
-            treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
-            treeDrawer.doCommand("setBranchColor", borderColor, cc);
-
-            if (tipOrientation.equalsIgnoreCase("up")) {
-                treeDrawer.doCommand("orientUP","",cc);
-            } else if (tipOrientation.equalsIgnoreCase("left")) {
-                treeDrawer.doCommand("orientLEFT","",cc);
-            } else if (tipOrientation.equalsIgnoreCase("right")) {
-                treeDrawer.doCommand("orientRIGHT","",cc);
-            } else if (tipOrientation.equalsIgnoreCase("down")) {
-                treeDrawer.doCommand("orientDOWN","",cc);
             }
         }
 
         if (scaleProperties != null) {
-            /*          visible: true|false
-        font-family, font-size, etc.
-        border-color: black;
-        border-size: 1px;
-        border-style: solid;
-        scale-width: value
-        scale-title: text   */
-            String scaleVisible;
-            String borderWidth;
-            String borderColor;
-            String fontSize = "10";
-            String fontFamily = "Helvetica";
             for (PropertyValue pv : scaleProperties) {
-                MesquiteMessage.notifyProgrammer("setting scaleProperty "+pv.toString());
-                if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                    borderWidth = pv.getValue();
-                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-                    borderColor = pv.getValue();
-                } else if (pv.getProperty().equalsIgnoreCase("visible")) {
-                    scaleVisible = pv.getValue();
+                if (pv.getProperty().equalsIgnoreCase("visible")) {
+                	if (pv.getValue().equalsIgnoreCase("true")) {
+						nodeLocs.doCommand("toggleScale", "on", cc);
+					} else {
+						nodeLocs.doCommand("toggleScale", "off", cc);
+					}
                 } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    fontFamily = pv.getValue();
+					taxonNames.doCommand("setFont",pv.getValue(),cc);
                 } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    fontSize = pv.getValue();
+					taxonNames.doCommand("setFontSize",pv.getValue(),cc);
+                } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
+                	// this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
+                	// this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
+                	// this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    String fontFamily = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    String fontSize = pv.getValue();
+                } else if (pv.getProperty().equalsIgnoreCase("scale-width")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("scale-title")) {
+                    //this isn't implemented yet
                 }
             }
         }
@@ -390,7 +380,7 @@ public class TSSHandler extends NamespaceHandler {
             } else if (pv.getProperty().equals("color")) {
 				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
 			} else if (pv.getProperty().equals("collapsed")) {
-				if (Boolean.getBoolean(val)) {
+				if (val.equalsIgnoreCase("true")) {
 					formatted_pvs = formatted_pvs + ";" + "triangled:on";
 				}
 			}
@@ -477,15 +467,12 @@ public class TSSHandler extends NamespaceHandler {
                     String fontFamily = chooseAFont(pv.getValue());
                     canvasProperties.add(new PropertyValue("font-family", fontFamily));
                 } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    //convert this value to a point number
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
                     canvasProperties.add(new PropertyValue("font-size", String.valueOf(value)));
                 } else if (pv.getProperty().equalsIgnoreCase("height")) {
-                    //convert this value to a single pixel number
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_HEIGHT);
                     canvasProperties.add(new PropertyValue("height", String.valueOf(value)));
                 } else if (pv.getProperty().equalsIgnoreCase("width")) {
-                    //convert this value to a single pixel number
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_WIDTH);
                     canvasProperties.add(new PropertyValue("width", String.valueOf(value)));
                 }
@@ -496,7 +483,7 @@ public class TSSHandler extends NamespaceHandler {
         if (pvs != null) {
             for (PropertyValue pv : pvs) {
                 if (pv.getProperty().equalsIgnoreCase("layout")) {
-                    treeProperties.add(new PropertyValue("layout", "rectangular"));
+                    treeProperties.add(new PropertyValue("layout", pv.getValue().toUpperCase()));
                 } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
                     treeProperties.add(new PropertyValue("border-width", String.valueOf(value)));
@@ -513,18 +500,16 @@ public class TSSHandler extends NamespaceHandler {
         }
 
         pvs = getClass ("scale", "");
-        /*
-            visible: true|false
-            font-family, font-size, etc.
-            border-color: black;
-            border-size: 1px;
-            border-style: solid;
-            scale-width: value
-            scale-title: “text”   */
         if (pvs != null) {
             for (PropertyValue pv : pvs) {
-                if (pv.getProperty().equalsIgnoreCase("layout")) {
-                    scaleProperties.add(new PropertyValue("layout", "rectangular"));
+                if (pv.getProperty().equalsIgnoreCase("visible")) {
+                    scaleProperties.add(new PropertyValue("visible", pv.getValue()));
+                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
+                    String fontFamily = chooseAFont(pv.getValue());
+                    scaleProperties.add(new PropertyValue("font-family", fontFamily));
+                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
+                    int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
+                    scaleProperties.add(new PropertyValue("font-size", String.valueOf(value)));
                 } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_BORDER_WIDTH);
                     scaleProperties.add(new PropertyValue("border-width", String.valueOf(value)));
@@ -532,10 +517,10 @@ public class TSSHandler extends NamespaceHandler {
                     scaleProperties.add(new PropertyValue("border-color", convertToMesColorNumber(pv.getValue())));
                 } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
                     //this isn't implemented yet
-                } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                    scaleProperties.add(new PropertyValue("tip-orientation", pv.getValue().toUpperCase()));
-                } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
-                    scaleProperties.add(new PropertyValue("scaled", pv.getValue()));
+                } else if (pv.getProperty().equalsIgnoreCase("scale-width")) {
+                    //this isn't implemented yet
+                } else if (pv.getProperty().equalsIgnoreCase("scale-title")) {
+                    //this isn't implemented yet
                 }
             }
         }
