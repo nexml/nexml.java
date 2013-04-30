@@ -5,6 +5,8 @@ import java.lang.reflect.Constructor;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Hashtable;
+import java.util.Enumeration;
+import java.net.URI;
 
 import mesquite.lib.*;
 import org.nexml.model.Annotatable;
