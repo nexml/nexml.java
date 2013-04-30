@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../Eclipse/Mesquite/Source">
+      <sourceFolder url="file://$MODULE_DIR$/../Eclipse/Mesquite/Source" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../Eclipse/Mesquite/bin" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../Eclipse/Mesquite/bin" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Mesquite Source" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../Eclipse" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../Eclipse/Mesquite/LibrarySource" />
+          <root url="file://$MODULE_DIR$/../Eclipse/Mesquite/Mesquite_Folder" />
+          <root url="file://$MODULE_DIR$/../Eclipse/Mesquite/Source" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>
+

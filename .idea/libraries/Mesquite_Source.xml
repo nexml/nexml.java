@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Mesquite Source">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../Eclipse/Mesquite/Source" />
+    </SOURCES>
+  </library>
+</component>
