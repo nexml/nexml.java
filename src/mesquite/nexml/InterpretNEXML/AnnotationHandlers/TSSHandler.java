@@ -252,10 +252,6 @@ public class TSSHandler extends NamespaceHandler {
 					} else {
 						nodeLocs.doCommand("toggleScale", "off", cc);
 					}
-                } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-					taxonNames.doCommand("setFont",pv.getValue(),cc);
-                } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-					taxonNames.doCommand("setFontSize",pv.getValue(),cc);
                 } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
                 	// this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
@@ -263,9 +259,9 @@ public class TSSHandler extends NamespaceHandler {
                 } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
                 	// this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
-                    String fontFamily = pv.getValue();
+                    // this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
-                    String fontSize = pv.getValue();
+                    // this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("scale-width")) {
                     //this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("scale-title")) {
