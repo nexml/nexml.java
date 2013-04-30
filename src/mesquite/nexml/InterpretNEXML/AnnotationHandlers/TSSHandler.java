@@ -180,7 +180,7 @@ public class TSSHandler extends NamespaceHandler {
         Commandable treeWindow = (Commandable) treeWindowMaker.doCommand("getTreeWindow", Integer.toString(1), cc);
         BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
         BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
-        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.StyledSquareTree.StyledSquareTree", cc);
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.SquareTree.SquareTree", cc);
         NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
 
 
@@ -262,7 +262,7 @@ public class TSSHandler extends NamespaceHandler {
         border-size: 1px;
         border-style: solid;
         scale-width: value
-        scale-title: ‚Äútext‚Äù   */
+        scale-title: text   */
             String scaleVisible;
             String borderWidth;
             String borderColor;
