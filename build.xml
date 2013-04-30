@@ -41,6 +41,7 @@
     <path id="classpath-validator">
         <fileset dir="${lib}">
             <include name="${xercesjar}"/>
+            <include name="${jstyleparserjar}"/>
             <include name="${saxonjar}"/>
         </fileset>
     </path>
@@ -56,11 +57,13 @@
 
     <target name="validator" depends="build-validator">
     	<mkdir dir="${xercesfolder}"/>
+    	<mkdir dir="${jstyleparserfolder}"/>
     	<unzip src="${lib}/${xercesjar}" dest="${xercesfolder}"/>
     	<unzip src="${lib}/${saxonjar}" dest="${saxonfolder}"/>
         <jar destfile="${validatorjar}">
             <fileset dir="${classfiles}"/>
             <fileset dir="${xercesfolder}"/>
+            <fileset dir="${jstyleparserfolder}"/>
         	<fileset dir="${saxonfolder}" excludes="META-INF/SAXONICA.*" />
         	<manifest>
         		<attribute name="Main-Class" value="validator.ValidateNeXML"/>
@@ -132,6 +135,7 @@
     <target name="clean">
         <delete dir="${classfiles}"/>
     	<delete dir="${xercesfolder}"/>
+    	<delete dir="${jstyleparserfolder}"/>
     	<delete dir="${saxonfolder}"/>
         <delete file="${jarfile}"/>
     	<delete file="${mesquitezip}"/>
