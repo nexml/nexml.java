@@ -40,7 +40,7 @@ public class TSSHandler extends NamespaceHandler {
         super();
         mTSSHash = new Hashtable();
         try {
-            mTSSFile = new File(mesquite.lib.MesquiteModule.prefsDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+            mTSSFile = new File(mesquite.lib.MesquiteModule.mesquiteDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
         } catch (Exception e) {
             if (e instanceof FileNotFoundException) {
                 MesquiteMessage.discreetNotifyUser("This XML file uses TSS notation, but no TSS file was found.");
