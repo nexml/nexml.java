@@ -140,6 +140,9 @@
         <delete file="${jarfile}"/>
     	<delete file="${mesquitezip}"/>
     	<delete file="${validatorjar}"/>
+		<delete file="${env.MESQUITE_ROOT}/${mesquite-properties}"/>
+		<delete file="${env.MESQUITE_ROOT}/${mesquite-ns-properties}"/>
+		<delete file="${env.MESQUITE_ROOT}/${default-tss}"/>
     </target>
 
 </project>
