@@ -35,6 +35,9 @@ public class TSSHandler extends NamespaceHandler {
     private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
     private boolean generalSelectorsHaveInitialized = false;
+    public static final String TSSPrefix = "tss";
+    public static final String TSSURIString = "http://mesquiteproject.org/tss#";
+
 
     public TSSHandler() {
         super();
@@ -112,7 +115,7 @@ public class TSSHandler extends NamespaceHandler {
 	@Override
 	public
 	String getPrefix() {
-		return Constants.TSSPrefix;
+		return TSSPrefix;
 	}
 
 	/* (non-Javadoc)
@@ -121,7 +124,7 @@ public class TSSHandler extends NamespaceHandler {
 	@Override
 	public
 	String getURIString() {
-		return Constants.TSSURIString;
+		return TSSURIString;
 	}
 // This parses the actual xml meta tag for TSS
 // index is the Mesquite node ID
