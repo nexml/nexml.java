@@ -8,7 +8,6 @@ public class Constants {
 	public static final String MESQUITE_NS_BASE = "http://mesquiteproject.org#";
 	public static final String NRURIString = "http://mesquiteproject.org/namereference#";
 	public static final String BeanURIString = "http://mesquiteproject.org/bean#";
-	public static final String TSSURIString = "http://mesquiteproject.org/tss#";
 	public static final String BaseURIString = "http://mesquiteproject.org#";
 
 	public static final String BasePrefix = "msq";
