@@ -7,7 +7,6 @@ import org.nexml.model.OTUs;
 import org.nexml.model.OTUsLinkable;
 import org.nexml.model.Segmented;
 
-import mesquite.lib.Attachable;
 import mesquite.lib.EmployerEmployee;
 import mesquite.lib.FileElement;
 import mesquite.lib.Listable;
@@ -17,7 +16,7 @@ import mesquite.lib.MesquiteProject;
 public abstract class NexmlBlockReader extends NexmlReader {
 
 	/**
-	 * 
+	 *
 	 * @param employerEmployee
 	 */
 	public NexmlBlockReader(EmployerEmployee employerEmployee) {
@@ -25,23 +24,25 @@ public abstract class NexmlBlockReader extends NexmlReader {
 	}
 
 	/**
-	 * 
-	 * @param xmlProject
-	 * @param mesBlock
-	 * @return
+	 *
+	 * @param mesProject
+	 * @param mesFile
+     * @param xmlAnnotatable
+     * @param xmlOTUs
+     * @return
 	 */
 	protected abstract FileElement readBlock(MesquiteProject mesProject, MesquiteFile mesFile, Annotatable xmlAnnotatable, OTUs xmlOTUs);
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesBlock
 	 * @param index
 	 * @return
 	 */
 	protected abstract Listable getThingInMesquiteBlock(FileElement mesBlock,int index);
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesProject
 	 * @param mesFile
 	 * @param xmlBlocks
@@ -53,7 +54,7 @@ public abstract class NexmlBlockReader extends NexmlReader {
 				xmlOTUs = ((OTUsLinkable)xmlAnnotatable).getOTUs();
 			}
 			FileElement mesFE = readBlock(mesProject, mesFile, xmlAnnotatable, xmlOTUs);
-			readWrappedAnnotations((Attachable)mesFE,xmlAnnotatable);
+			readWrappedAnnotations(mesFE,xmlAnnotatable);
 			Segmented<?> xmlSegmented = (Segmented<?>)xmlAnnotatable;
 			int count = xmlSegmented.getSegmentCount();
 			for ( int i = 0; i < count; i++ ) {
@@ -64,8 +65,8 @@ public abstract class NexmlBlockReader extends NexmlReader {
 				}
 			}
 			mesFE.addToFile(mesFile, mesProject, getEmployerEmployee().findElementManager(mesFE.getClass()));
-		}		
+		}
 	}
-	
-	
+
+
 }

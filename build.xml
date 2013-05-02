@@ -89,11 +89,11 @@
 	</target>
 	
 	<target name="mesquite-install" depends="build-mesquite">
-		<copy todir="${env.MESQUITE_ROOT}">
+		<copy todir="${toString:classpath-mesquite}">
 			<fileset dir="${classfiles}"/>
 		</copy>
-		<copyfile dest="${env.MESQUITE_ROOT}/${mesquite-properties}" src="${src}/${mesquite-properties}"/>
-		<copyfile dest="${env.MESQUITE_ROOT}/${mesquite-ns-properties}" src="${src}/${mesquite-ns-properties}"/>		
+		<copyfile dest="${toString:classpath-mesquite}/${mesquite-properties}" src="${src}/${mesquite-properties}"/>
+		<copyfile dest="${toString:classpath-mesquite}/${mesquite-ns-properties}" src="${src}/${mesquite-ns-properties}"/>
 	</target>
 	
 	<!-- JUNIT TESTS -->

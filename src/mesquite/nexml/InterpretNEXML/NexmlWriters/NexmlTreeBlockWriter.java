@@ -2,12 +2,7 @@ package mesquite.nexml.InterpretNEXML.NexmlWriters;
 
 import java.util.Iterator;
 
-import mesquite.lib.EmployerEmployee;
-import mesquite.lib.FileElement;
-import mesquite.lib.Taxa;
-import mesquite.lib.Taxon;
-import mesquite.lib.Tree;
-import mesquite.lib.TreeVector;
+import mesquite.lib.*;
 
 import org.nexml.model.Annotatable;
 import org.nexml.model.Document;
@@ -67,9 +62,10 @@ public class NexmlTreeBlockWriter extends NexmlBlockWriter {
 	 * @param xmlParentNode
 	 * @param xmlTaxa
 	 */
-	private void writeTree(Tree mesTree,org.nexml.model.Tree<FloatEdge> xmlTree,int mesNode,Node xmlRoot,Node xmlParentNode,OTUs xmlTaxa) {
-		xmlRoot.setLabel(mesTree.getNodeLabel(mesNode));
-		if ( mesTree.nodeIsTerminal(mesNode) ) {
+	private void writeTree(Tree mesTree, org.nexml.model.Tree<FloatEdge> xmlTree, int mesNode, Node xmlRoot, Node xmlParentNode, OTUs xmlTaxa) {
+        xmlRoot.setLabel(mesTree.getNodeLabel(mesNode));
+        writeAnnotations((Associable) mesTree, xmlRoot, mesNode);
+        if ( mesTree.nodeIsTerminal(mesNode) ) {
 			int[] mesTaxonNumber = mesTree.getTerminalTaxa(mesNode);
 			Taxa mesTaxa = mesTree.getTaxa();
 			Taxon mesTaxon = mesTaxa.getTaxon(mesTaxonNumber[0]);
