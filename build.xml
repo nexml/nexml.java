@@ -12,6 +12,7 @@
 	<property name="validatorjar" value="validator.jar"/>
 	<property name="xercesjar" value="xercesImpl.jar"/>
 	<property name="xercesfolder" value="xerces"/>
+	<property name="osbcpcssjar" value="osbcp-css-parser-1.4.jar"/>
 	<property name="saxonjar" value="saxon9he.jar"/>
 	<property name="saxonfolder" value="saxon"/>
 	<property name="mesquitezip" value="mesquite-nexml.zip"/>
@@ -23,7 +24,7 @@
 	<!-- CORE LIBRARY -->
 	<target name="compile" depends="clean">
 		<mkdir dir="${classfiles}"/>
-	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5">
+	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
 	        <exclude name="**/mesquite/nexml/InterpretNEXML/**"/>
 	    	<exclude name="**/validator/**"/>
 	    	<exclude name="**/transformer/**"/>
@@ -71,12 +72,13 @@
 	<!-- MESQUITE -->
 	<path id="classpath-mesquite">
 		<pathelement path="${env.MESQUITE_ROOT}"/>
-	</path>
+    </path>
 
 	<target name="build-mesquite" depends="clean">
 		<mkdir dir="${classfiles}"/>
-		<echo message="Using MESQUITE_ROOT=${toString:classpath-mesquite}"/>
-		<javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5">
+        <unzip src="${lib}/${osbcpcssjar}" dest="${classfiles}"/>
+        <echo message="Using MESQUITE_ROOT=${toString:classpath-mesquite}"/>
+		<javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
 			<exclude name="**/validator/*"/>
 			<exclude name="**/transformer/*"/>
 			<classpath refid="classpath-mesquite"/>
@@ -93,9 +95,9 @@
 		<copy todir="${toString:classpath-mesquite}">
 			<fileset dir="${classfiles}"/>
 		</copy>
-		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-properties}" file="${src}/${mesquite-properties}"/>
-		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-ns-properties}" file="${src}/${mesquite-ns-properties}"/>
-		<copy tofile="${env.MESQUITE_ROOT}/${default-tss}" file="${resources}/${default-tss}"/>
+		<copy tofile="${toString:classpath-mesquite}/${mesquite-properties}" file="${src}/${mesquite-properties}"/>
+		<copy tofile="${toString:classpath-mesquite}/${mesquite-ns-properties}" file="${src}/${mesquite-ns-properties}"/>
+		<copy tofile="${toString:classpath-mesquite}/${default-tss}" file="${resources}/${default-tss}"/>
 	</target>
 
 	<!-- JUNIT TESTS -->
@@ -134,9 +136,6 @@
         <delete file="${jarfile}"/>
     	<delete file="${mesquitezip}"/>
     	<delete file="${validatorjar}"/>
-		<delete file="${env.MESQUITE_ROOT}/${mesquite-properties}"/>
-		<delete file="${env.MESQUITE_ROOT}/${mesquite-ns-properties}"/>
-		<delete file="${env.MESQUITE_ROOT}/${default-tss}"/>
     </target>
 
 </project>
