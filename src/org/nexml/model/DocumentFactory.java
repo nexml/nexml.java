@@ -13,7 +13,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class DocumentFactory {
-	
+
 	/**
 	 * Creates a new NeXML document, to be populated programmatically.
 	 * @return an org.nexml.model.Document object
@@ -22,7 +22,7 @@ public class DocumentFactory {
 	static public Document createDocument() throws ParserConfigurationException {
 		return new DocumentImpl(getDocumentBuilder().newDocument());
 	}
-	
+
 	/**
 	 * Creates a new NeXML document, to be populated programmatically.
 	 * Catches ParserConfigurationException internally, prints stack trace
@@ -47,11 +47,12 @@ public class DocumentFactory {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	static public Document parse(InputStream inputStream)
+		static public Document parse(InputStream inputStream)
 			throws ParserConfigurationException, SAXException, IOException {
 		return createDocument(getDocumentBuilder().parse(inputStream));
 	}
-	
+
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -83,7 +84,7 @@ public class DocumentFactory {
 			ParserConfigurationException {
 		return createDocument(getDocumentBuilder().parse(uri));
 	}
-	
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -100,7 +101,7 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
+	}
 
 	/**
 	 * Parses a NeXML document, returns a populated object hierarchy
@@ -115,7 +116,7 @@ public class DocumentFactory {
 			ParserConfigurationException {
 		return createDocument(getDocumentBuilder().parse(file));
 	}
-	
+
 	/**
 	 * Like parse, but wraps it in a try/catch block
 	 * @param inputStream
@@ -132,7 +133,7 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
+	}
 
 	/**
 	 * Parses a NeXML document, returns a populated object hierarchy
@@ -164,8 +165,8 @@ public class DocumentFactory {
 			e.printStackTrace();
 		}
 		return null;
-	}	
-	
+	}
+
 	static private Document createDocument(org.w3c.dom.Document domDocument) {
 		return new DocumentImpl(domDocument, domDocument.getDocumentElement());
 	}

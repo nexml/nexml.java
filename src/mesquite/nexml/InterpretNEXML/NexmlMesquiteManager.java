@@ -4,65 +4,66 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Hashtable;
+import java.util.Enumeration;
+import java.net.URI;
 
+import mesquite.lib.*;
 import org.nexml.model.Annotatable;
 import org.nexml.model.Annotation;
 import org.nexml.model.Document;
 import org.nexml.model.OTU;
 import org.nexml.model.OTUs;
 
-import mesquite.lib.EmployerEmployee;
-import mesquite.lib.ListableVector;
-import mesquite.lib.MesquiteProject;
-import mesquite.lib.Taxa;
-import mesquite.lib.Taxon;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.NamespaceHandler;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandler;
 import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandlerImpl;
 
 public class NexmlMesquiteManager {
-	private static boolean debugging = true;
-	
-	private Properties mPredicateHandlerMapping;	
+	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
-	
+
+	private static Hashtable mActiveNamespaceHandlers;
 	private EmployerEmployee mEmployerEmployee;
-	
+
 	/**
-	 * 
+	 *
 	 * @param employerEmployee
 	 */
-	public NexmlMesquiteManager (EmployerEmployee employerEmployee) { 
+	public NexmlMesquiteManager (EmployerEmployee employerEmployee) {
 		mEmployerEmployee = employerEmployee;
-		mPredicateHandlerMapping = new Properties();
-		mNamespaceHandlerMapping = new Properties();
-	    try {
-	    	mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
-	    	mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
-	    } catch (IOException e) {
-	    	e.printStackTrace();
-	    }
+        mPredicateHandlerMapping = new Properties();
+        mNamespaceHandlerMapping = new Properties();
+        if (mActiveNamespaceHandlers == null) {
+            mActiveNamespaceHandlers = new Hashtable();
+        }
+        try {
+            mPredicateHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.PREDICATES_PROPERTIES));
+            mNamespaceHandlerMapping.load(NexmlMesquiteManager.class.getResourceAsStream(Constants.NAMESPACE_PROPERTIES));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return
 	 */
 	protected EmployerEmployee getEmployerEmployee() {
 		return mEmployerEmployee;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param s
 	 */
 	public static void debug(String s) {
-		if (debugging)
+		if (Constants.DEBUGGING)
 			mesquite.lib.MesquiteMessage.notifyProgrammer(s);
-	}	
-	
+	}
+
 	/**
-	 * 
+	 *
 	 * @param annotation
 	 * @return
 	 */
@@ -70,73 +71,109 @@ public class NexmlMesquiteManager {
 		String property = annotation.getProperty();
 		if ( property.equals("") ) {
 			property = annotation.getRel();
-		}			
+		}
 		String[] curie = property.split(":");
-		String localProperty = curie[1]; // NameReference;	lookup in properties		
-		return localProperty;
+        if (curie.length > 1) {
+            return curie[1]; // NameReference;	lookup in properties
+        } else {
+            MesquiteMessage.discreetNotifyUser("Malformed local XML property "+property);
+            return "";
+        }
 	}
-	
+
 	/**
-	 * 
-	 * @param subject
-	 * @param predicate
-	 * @param value
-	 * @return
+	 *
+     * @param annotatable
+     * @param annotation
+     * @return
 	 */
-	protected PredicateHandler getPredicateHandler(Annotatable annotatable, Annotation annotation) {
-		String predicate = getLocalProperty(annotation);
-		String handlerClassName = mPredicateHandlerMapping.getProperty(predicate);
-		PredicateHandler ph = null;
-		if ( handlerClassName != null ) {
-			try {
-				Class<?> handlerClass = Class.forName(handlerClassName);
-				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);	
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		if ( null == ph ) {
-			ph = new PredicateHandlerImpl(annotatable,annotation);
-		}
-		debug("Using predicateHandler " + ph.toString());
-		return ph;
-	}	
-	
-	/**
-	 * 
-	 * @param uri
-	 * @return
-	 */
-	protected NamespaceHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
-		String handlerClassName = null;
-		String uriString = annotation.getPredicateNamespace().toString();
-		for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
-			if ( mNamespaceHandlerMapping.getProperty(name).equals(uriString) ) {
-				handlerClassName = name;
-			}
-		}
-		NamespaceHandler nh = null;
-		if ( handlerClassName != null ) {
-			try {
-				Class<?> handlerClass = Class.forName(handlerClassName);
-				Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
-				nh = (NamespaceHandler) declaredConstructor.newInstance(annotatable,annotation);	
-			} catch (Exception e) {
-				e.printStackTrace();
-			}			
-		}
-		if ( null == nh ) {
-			debug("no namespace handler");
-		}
-		else {
-			debug("using namespace handler "+nh.toString());
-		}
-		return nh;
+	protected PredicateHandler getNamespaceHandler(Annotatable annotatable, Annotation annotation) {
+		PredicateHandler ph = getNamespaceHandlerFromURI(annotation.getPredicateNamespace());
+        if (ph == null) { // couldn't find a declared namespace, so find a predicate handler
+            debug ("XML namespace "+annotation.getPredicateNamespace()+" for annotation "+annotation.getProperty()+" can't be found, using a local predicate handler instead.");
+            String predicate = getLocalProperty(annotation);
+            String handlerClassName = mPredicateHandlerMapping.getProperty(predicate);
+            if ( handlerClassName != null ) { // there is a mapped predicate handler
+                try {
+                    Class<?> handlerClass = Class.forName(handlerClassName);
+                    Constructor<?> declaredConstructor = handlerClass.getDeclaredConstructor(Annotatable.class,Annotation.class);
+                    ph = (PredicateHandler) declaredConstructor.newInstance(annotatable,annotation);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else { // couldn't find a mapped predicate handler either, so just make a generic one.
+                ph = new PredicateHandlerImpl() ;
+            }
+        }
+        if (ph != null) {
+            return ph.initPredicateHandler(annotatable,annotation);
+        }
+        return null;
 	}
-	
+
+    protected NamespaceHandler getNamespaceHandlerFromURI(URI uri) {
+        if (uri == null) {
+            return null;
+        }
+        NamespaceHandler nh = getActiveNamespaceHandler(uri); // look for existing NamespaceHandler
+        if (nh == null)  {  // if there isn't one yet, see if we can make one from the mappings we know about
+            Class<?> handlerClass = findNamespaceHandlerClass(uri);
+            if (handlerClass != null) {
+                try {
+                    Constructor<?> declaredConstructor = handlerClass.getConstructor();
+                    nh = (NamespaceHandler) declaredConstructor.newInstance();
+                    addActiveNamespaceHandler(uri, nh);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return nh;
+    }
+
+    protected Class<?> findNamespaceHandlerClass (URI uri) {
+        Class<?> handlerClass = null;
+        for ( String name : mNamespaceHandlerMapping.stringPropertyNames() ) {
+            if ( mNamespaceHandlerMapping.getProperty(name).equals(uri.toString()) ) {
+                try {
+                    handlerClass = Class.forName(name);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+        return handlerClass;
+    }
+
+    protected boolean isNamespaceHandlerActive(URI uri) {
+        if (uri == null) {
+            return false;
+        }
+        return mActiveNamespaceHandlers.containsKey(uri);
+    }
+
+    protected Enumeration<URI> getActiveNamespaceHandlers() {
+        return mActiveNamespaceHandlers.keys();
+    }
+
+    protected void addActiveNamespaceHandler(URI uri, NamespaceHandler nh) {
+        mActiveNamespaceHandlers.put(uri, nh);
+    }
+
+    protected NamespaceHandler getActiveNamespaceHandler (URI uri) {
+        if (uri == null) {
+            return null;
+        }
+        return (NamespaceHandler) mActiveNamespaceHandlers.get(uri);
+    }
+
+    protected void resetActiveNamespaceHandlers() {
+        mActiveNamespaceHandlers = new Hashtable();
+    }
+
 	/**
-	 * 
+	 *
 	 * @param mesTaxa
 	 * @param xmlProject
 	 * @return
@@ -150,9 +187,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mesTaxon
 	 * @param xmlTaxa
 	 * @return
@@ -164,12 +201,12 @@ public class NexmlMesquiteManager {
 			if ( msqUIDs.contains(mesTaxonIndex) ) {
 				return xmlTaxon;
 			}
-		}		
+		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlOTUs
 	 * @param mesProject
 	 * @return
@@ -185,9 +222,9 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param xmlOTU
 	 * @param mesTaxa
 	 * @return
@@ -202,5 +239,5 @@ public class NexmlMesquiteManager {
 		}
 		return null;
 	}
-	
+
 }

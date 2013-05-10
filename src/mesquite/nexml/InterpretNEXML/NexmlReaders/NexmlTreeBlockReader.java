@@ -3,6 +3,7 @@
  */
 package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
+import java.io.IOException;
 import java.util.Set;
 
 import mesquite.lib.EmployerEmployee;
@@ -62,7 +63,11 @@ public class NexmlTreeBlockReader extends NexmlBlockReader {
 					break FINDROOT;
 				}
 			}
-			readTree(xmlNetwork, xmlRoot, xmlNetwork.getOutNodes(xmlRoot), mesTree.getRoot(), mesTree);
+			try {
+                readTree(xmlNetwork, xmlRoot, xmlNetwork.getOutNodes(xmlRoot), mesTree.getRoot(), mesTree);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 		}
 		return mesTreeVector;
 	}
@@ -75,8 +80,11 @@ public class NexmlTreeBlockReader extends NexmlBlockReader {
 	 * @param mesRoot
 	 * @param mesTree
 	 */
-	private void readTree(Network<?> xmlNetwork, Node xmlRoot, Set<Node> xmlChildren, int mesRoot, MesquiteTree mesTree) {
+	private void readTree(Network<?> xmlNetwork, Node xmlRoot, Set<Node> xmlChildren, int mesRoot, MesquiteTree mesTree) throws IOException {
 		OTU xmlOTU = xmlRoot.getOTU();
+        if (mesTree == null) {
+            throw new IOException();
+        }
 		if ( xmlOTU != null ) {
 			String xmlOTUId = xmlOTU.getId();
 			Taxa mesTaxa = mesTree.getTaxa();
