@@ -239,6 +239,7 @@ public class TSSHandler extends NamespaceHandler {
         // execute the treeDrawer commands in order:
         DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("getTreeDrawer","",cc);
         if (layout != null) {
+            NexmlMesquiteManager.debug("treeDrawer is "+ treeDrawer.toString()+", layout is "+layout.toString());
             if (isTreeDrawerAvailable(layout)) {
                 treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#"+layout, cc);
             }
@@ -314,9 +315,7 @@ public class TSSHandler extends NamespaceHandler {
             try {
                 val = Integer.parseInt(tssValue);
             } catch (Exception ex) {
-                NexmlMesquiteManager.debug("TSS class "+tssClassName+" doesn't have a subclass for "+tssValue);
                 // if it's not a number, there aren't any more types of classes this could be.
-                return null;
             }
 
             for (Enumeration e = ((Hashtable) hashvalue).keys(); e.hasMoreElements();) {
@@ -335,7 +334,9 @@ public class TSSHandler extends NamespaceHandler {
         if (pvs == null) {
             // there might be a default key; do one last check for that. If it fails, return null.
             pvs = (List)((Hashtable)hashvalue).get(Constants.NO_VALUE);
-            return pvs;
+            if (pvs == null) {
+                return null;
+            }
         }
         Vector<PropertyValue> new_pvs = new Vector<PropertyValue>();
         // process the compound properties into single properties.
@@ -403,7 +404,9 @@ public class TSSHandler extends NamespaceHandler {
         }
         for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
-			val = val.replaceAll("value|VALUE", tssValue);
+
+            val = val.replaceAll("value|VALUE", tssValue);
+            NexmlMesquiteManager.debug("val is "+val+", with tssValue "+tssValue);
             if (pv.getProperty().equals("border-color")) {
                 formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
 			} else if (pv.getProperty().equals("border-width")) {
