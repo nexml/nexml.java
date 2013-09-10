@@ -41,18 +41,14 @@ public class BeanHandler extends NamespaceHandler {
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
 		String setter = "set" + parts[1];
-		String value = (String) getValue();
-		NexmlMesquiteManager.debug("BeanHandler setter: "+setter+", value: "+value);
-		if ( null != value ) {
-            Method method;
-            try {
-                method = associable.getClass().getMethod(setter, value.getClass());
-                NexmlMesquiteManager.debug("should be invoking "+method.toString());
+		Object value = getValue();
+        Method method;
+        try {
+            method = associable.getClass().getMethod(setter, value.getClass());
 //                method.invoke(associable, value);
-            } catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+        } catch (Exception e) {
+//                e.printStackTrace();
+        }
 	}
 
 	@Override
