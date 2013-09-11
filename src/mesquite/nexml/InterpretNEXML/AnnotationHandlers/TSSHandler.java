@@ -406,7 +406,6 @@ public class TSSHandler extends NamespaceHandler {
 			String val = pv.getValue();
 
             val = val.replaceAll("value|VALUE", tssValue);
-            NexmlMesquiteManager.debug("val is "+val+", with tssValue "+tssValue);
             if (pv.getProperty().equals("border-color")) {
                 formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
 			} else if (pv.getProperty().equals("border-width")) {
