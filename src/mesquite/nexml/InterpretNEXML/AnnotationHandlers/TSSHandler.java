@@ -399,30 +399,33 @@ public class TSSHandler extends NamespaceHandler {
 	}
 
     private String mesquiteNodeAnnotation (String tssClass, String tssValue ) {
-		String formatted_pvs = "tss:"+tssClass+ "=" +tssValue;
-        List<PropertyValue> pvs = getClass(tssClass, tssValue);
-        if (pvs == null) {
-            return Constants.NO_RULE;
-        }
-        for (PropertyValue pv : pvs) {
-			String val = pv.getValue();
+    	String formatted_pvs = "tss:"+tssClass+ "=" +tssValue;
+    	List<PropertyValue> pvs = getClass(tssClass, tssValue);
+    	if (pvs == null) {
+    		return Constants.NO_RULE;
+    	}
+    	for (PropertyValue pv : pvs) {
+    		String val = pv.getValue();
 
-            val = val.replaceAll("value|VALUE", tssValue);
-            if (pv.getProperty().equals("border-color")) {
-                formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
-			} else if (pv.getProperty().equals("border-width")) {
-                formatted_pvs = formatted_pvs + ";" + "width:" + val;
-            } else if (pv.getProperty().equals("color")) {
-				formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
-			} else if (pv.getProperty().equals("collapsed")) {
-				if (val.equalsIgnoreCase("true")) {
-					formatted_pvs = formatted_pvs + ";" + "triangled:on";
-				}
-			}
-		}
-		NexmlMesquiteManager.debug(pvs.toString() + " converted to Mesquite annotation " + formatted_pvs);
-		return formatted_pvs;
-	}
+    		val = val.replaceAll("value|VALUE", tssValue);
+    		if (pv.getProperty().equals("border-color")) {
+    			formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
+    		} else if (pv.getProperty().equals("border-width")) {
+    			formatted_pvs = formatted_pvs + ";" + "width:" + val;
+    		} else if (pv.getProperty().equals("color")) {
+    			formatted_pvs = formatted_pvs + ";" + ("taxoncolor:" + convertToMesColorNumber(val));
+    		} else if (pv.getProperty().equals("collapsed")) {
+    			if (val.equalsIgnoreCase("true")) {
+    				formatted_pvs = formatted_pvs + ";" + "triangled:on";
+    			}
+    		} else if (pv.getProperty().equals("font-style")){
+    			formatted_pvs = formatted_pvs + ";" + ("taxonfont:" + val);
+    			MesquiteMessage.notifyProgrammer("Got font-style");
+    		}
+    	}
+    	NexmlMesquiteManager.debug(pvs.toString() + " converted to Mesquite annotation " + formatted_pvs);
+    	return formatted_pvs;
+    }
 
     private int convertToPixels (String stringValue, int defaultValue) {
         //convert this value to a point number
