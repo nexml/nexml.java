@@ -89,7 +89,7 @@ public class TSSHandler extends NamespaceHandler {
                             max = str.replaceAll("max\\s*=","");
                         }
                     }
-                    selectorSubClass = min+"."+max;
+                    selectorSubClass = min+"/"+max;
                 }
                 Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
                 if (subClassHash == null) {
@@ -300,7 +300,7 @@ public class TSSHandler extends NamespaceHandler {
     private List<PropertyValue> getClass (String tssClassName, String tssValue) {
 		Object hashvalue = mTSSHash.get(tssClassName);
         if (hashvalue == null) {
-            MesquiteMessage.discreetNotifyUser("TSS class "+tssClassName+" not found");
+            MesquiteMessage.notifyProgrammer("TSS class "+tssClassName+" not found");
             return null;
         }
         List<PropertyValue> pvs = null;
@@ -311,19 +311,21 @@ public class TSSHandler extends NamespaceHandler {
         pvs = (List)((Hashtable)hashvalue).get(tssValue);
         if (pvs == null) {
             // is tssValue a number? because maybe it's in a range.
-            int val = 0;
+            double val = 0;
             try {
-                val = Integer.parseInt(tssValue);
+                val = Double.parseDouble(tssValue);
             } catch (Exception ex) {
+                MesquiteMessage.notifyProgrammer("couldn't parse the number "+tssValue);
                 // if it's not a number, there aren't any more types of classes this could be.
             }
 
             for (Enumeration e = ((Hashtable) hashvalue).keys(); e.hasMoreElements();) {
                 String key = (String) e.nextElement();
-                String[] keyParts = key.split("\\.");
+                String[] keyParts = key.split("\\/");
                 if (keyParts.length>1) {
-                    int min = Integer.parseInt(keyParts[0]);
-                    int max = Integer.parseInt(keyParts[1]);
+                    double min = Double.parseDouble(keyParts[0]);
+                    double max = Double.parseDouble(keyParts[1]);
+                    NexmlMesquiteManager.debug("looking at val="+val+", min="+min+", max="+max+" from key "+key);
                     if ((val>=min) && (val<=max)) {
                         pvs = (List)((Hashtable)hashvalue).get(key);
                         break;
@@ -351,7 +353,7 @@ public class TSSHandler extends NamespaceHandler {
                 String[] split_pvs = pv.getValue().split(" ",2);
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
+                    MesquiteMessage.notifyProgrammer("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
@@ -360,7 +362,7 @@ public class TSSHandler extends NamespaceHandler {
                 }
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
+                    MesquiteMessage.notifyProgrammer("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 fontSize = split_pvs[0];
@@ -418,7 +420,7 @@ public class TSSHandler extends NamespaceHandler {
 				}
 			}
 		}
-		NexmlMesquiteManager.debug("converted to Mesquite annotation " + formatted_pvs);
+		NexmlMesquiteManager.debug(pvs.toString() + " converted to Mesquite annotation " + formatted_pvs);
 		return formatted_pvs;
 	}
 
