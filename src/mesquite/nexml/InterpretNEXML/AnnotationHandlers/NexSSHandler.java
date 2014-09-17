@@ -25,31 +25,31 @@ import com.osbcp.cssparser.*;
  * @author rvosa
  *
  */
-public class TSSHandler extends NamespaceHandler {
-	private List<Rule> mTSSList;
-	private Hashtable mTSSHash;
-    private File mTSSFile;
+public class NexSSHandler extends NamespaceHandler {
+	private List<Rule> mNexSSList;
+	private Hashtable mNexSSHash;
+    private File mNexSSFile;
     private Vector<PropertyValue> treeProperties;
     private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
-    public static final String TSSPrefix = "tss";
-    public static final String TSSURIString = "http://mesquiteproject.org/tss#";
+    public static final String NexSSPrefix = "nexss";
+    public static final String NexSSURIString = "http://www.phylotastic.org/nexss#";
 
 
-    public TSSHandler() {
+    public NexSSHandler() {
         super();
-        mTSSHash = new Hashtable();
+        mNexSSHash = new Hashtable();
         try {
-            mTSSFile = new File(mesquite.lib.MesquiteModule.mesquiteDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.tss");
+            mNexSSFile = new File(mesquite.lib.MesquiteModule.mesquiteDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.nexss");
         } catch (Exception e) {
             if (e instanceof FileNotFoundException) {
-                MesquiteMessage.discreetNotifyUser("This XML file uses TSS notation, but no TSS file was found.");
+                MesquiteMessage.discreetNotifyUser("This NeXML file uses NexSS notation, but no NexSS file was found.");
             }
         }
         Scanner scanner = null;
         String cssString = "";
         try {
-            scanner = new Scanner(mTSSFile);
+            scanner = new Scanner(mNexSSFile);
         } catch (Exception e) {
             NexmlMesquiteManager.debug(e.toString());
         }
@@ -57,12 +57,12 @@ public class TSSHandler extends NamespaceHandler {
             cssString = cssString + scanner.nextLine();
         }
         try {
-            mTSSList = CSSParser.parse(cssString);
+            mNexSSList = CSSParser.parse(cssString);
         } catch (Exception e) {
             NexmlMesquiteManager.debug(e.toString());
         }
         // store the rules in the hash:
-        for ( Rule r : mTSSList) {
+        for ( Rule r : mNexSSList) {
             // we want to hash each rule as a value for each selector key separately.
             List<Selector> selectors = r.getSelectors();
             List<PropertyValue> pvs = r.getPropertyValues();
@@ -91,10 +91,10 @@ public class TSSHandler extends NamespaceHandler {
                     }
                     selectorSubClass = min+"/"+max;
                 }
-                Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
+                Hashtable subClassHash = (Hashtable) mNexSSHash.get(selectorName);
                 if (subClassHash == null) {
                     subClassHash = new Hashtable();
-                    mTSSHash.put(selectorName,subClassHash);
+                    mNexSSHash.put(selectorName, subClassHash);
                 }
                 if (selectorSubClass.isEmpty()) {
                     selectorSubClass = Constants.NO_VALUE;
@@ -111,7 +111,7 @@ public class TSSHandler extends NamespaceHandler {
 	@Override
 	public
 	String getPrefix() {
-		return TSSPrefix;
+		return NexSSPrefix;
 	}
 
 	/* (non-Javadoc)
@@ -120,25 +120,25 @@ public class TSSHandler extends NamespaceHandler {
 	@Override
 	public
 	String getURIString() {
-		return TSSURIString;
+		return NexSSURIString;
 	}
-// This parses the actual xml meta tag for TSS
+// This parses the actual xml meta tag for NexSS
 // index is the Mesquite node ID
 	@Override
 	public
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
-		String tssClass = parts[1];
+		String nexSSClass = parts[1];
 
-        Object convertedValue = mesquiteNodeAnnotation(tssClass, getValue().toString());
+        Object convertedValue = mesquiteNodeAnnotation(nexSSClass, getValue().toString());
         Object pred = getPredicate();
         if (convertedValue.equals(Constants.NO_RULE)) {
-            NexmlMesquiteManager.debug ("couldn't find TSS rule " + pred.toString()+" with value "+getValue().toString());
+            NexmlMesquiteManager.debug ("couldn't find NexSS rule " + pred.toString()+" with value "+getValue().toString());
             // no rule specified
         } else {
             String[] mesProps = convertedValue.toString().split(";");
             for (String prop : mesProps) {
-                if (prop.contains("tss:")) {
+                if (prop.contains("nexss:")) {
                     String[] propParts = prop.split("=");
                     String convertedProp = propParts[0];
                     String convertedVal = Constants.NO_VALUE;
@@ -297,25 +297,25 @@ public class TSSHandler extends NamespaceHandler {
         treeWindowMaker.doCommand("desuppressEPCResponse","",cc);
     }
 
-    private List<PropertyValue> getClass (String tssClassName, String tssValue) {
-		Object hashvalue = mTSSHash.get(tssClassName);
+    private List<PropertyValue> getClass (String nexSSClassName, String nexSSValue) {
+		Object hashvalue = mNexSSHash.get(nexSSClassName);
         if (hashvalue == null) {
-            MesquiteMessage.notifyProgrammer("TSS class "+tssClassName+" not found");
+            MesquiteMessage.notifyProgrammer("NexSS class "+nexSSClassName+" not found");
             return null;
         }
         List<PropertyValue> pvs = null;
-        if (tssValue.isEmpty()) {
-            tssValue = Constants.NO_VALUE;
+        if (nexSSValue.isEmpty()) {
+            nexSSValue = Constants.NO_VALUE;
         }
-        // check the tssValue to see if it's a string
-        pvs = (List)((Hashtable)hashvalue).get(tssValue);
+        // check the nexSSValue to see if it's a string
+        pvs = (List)((Hashtable)hashvalue).get(nexSSValue);
         if (pvs == null) {
-            // is tssValue a number? because maybe it's in a range.
+            // is nexSSValue a number? because maybe it's in a range.
             double val = 0;
             try {
-                val = Double.parseDouble(tssValue);
+                val = Double.parseDouble(nexSSValue);
             } catch (Exception ex) {
-                MesquiteMessage.notifyProgrammer("couldn't parse the number "+tssValue);
+                MesquiteMessage.notifyProgrammer("couldn't parse the number "+nexSSValue);
                 // if it's not a number, there aren't any more types of classes this could be.
             }
 
@@ -398,16 +398,16 @@ public class TSSHandler extends NamespaceHandler {
         return new_pvs;
 	}
 
-    private String mesquiteNodeAnnotation (String tssClass, String tssValue ) {
-		String formatted_pvs = "tss:"+tssClass+ "=" +tssValue;
-        List<PropertyValue> pvs = getClass(tssClass, tssValue);
+    private String mesquiteNodeAnnotation (String nexSSClass, String nexSSValue ) {
+		String formatted_pvs = "nexss:"+nexSSClass+ "=" +nexSSValue;
+        List<PropertyValue> pvs = getClass(nexSSClass, nexSSValue);
         if (pvs == null) {
             return Constants.NO_RULE;
         }
         for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
 
-            val = val.replaceAll("value|VALUE", tssValue);
+            val = val.replaceAll("value|VALUE", nexSSValue);
             if (pv.getProperty().equals("border-color")) {
                 formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
 			} else if (pv.getProperty().equals("border-width")) {

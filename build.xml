@@ -18,7 +18,7 @@
 	<property name="mesquitezip" value="mesquite-nexml.zip"/>
 	<property name="mesquite-properties" value="mesquite/nexml/InterpretNEXML/predicateHandlerMapping.properties"/>
 	<property name="mesquite-ns-properties" value="mesquite/nexml/InterpretNEXML/namespaceHandlerMapping.properties"/>
-	<property name="default-tss" value="default.tss"/>
+	<property name="default-nexss" value="default.nexss"/>
 	<property environment="env"/>
 
 	<!-- CORE LIBRARY -->
@@ -97,7 +97,7 @@
 		</copy>
 		<copy tofile="${toString:classpath-mesquite}/${mesquite-properties}" file="${src}/${mesquite-properties}"/>
 		<copy tofile="${toString:classpath-mesquite}/${mesquite-ns-properties}" file="${src}/${mesquite-ns-properties}"/>
-		<copy tofile="${toString:classpath-mesquite}/${default-tss}" file="${resources}/${default-tss}"/>
+		<copy tofile="${toString:classpath-mesquite}/${default-nexss}" file="${resources}/${default-nexss}"/>
 	</target>
 
 	<!-- JUNIT TESTS -->
