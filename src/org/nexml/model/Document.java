@@ -1,5 +1,7 @@
 package org.nexml.model;
 
+import org.w3c.dom.*;
+
 import java.util.List;
 
 public interface Document extends Annotatable {
@@ -47,9 +49,11 @@ public interface Document extends Annotatable {
 	 */	
 	MolecularMatrix createMolecularMatrix(OTUs otus, String type);
 
-	/**
-	 * Returns a list of all taxa blocks inside the document.
-	 */
+    List<ProcessingInstruction> getStylesheets();
+
+        /**
+         * Returns a list of all taxa blocks inside the document.
+         */
 	List<OTUs> getOTUsList();
 	
 	/**
