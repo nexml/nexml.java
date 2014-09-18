@@ -1,9 +1,9 @@
 package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Enumeration;
+import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
 import java.lang.reflect.Method;
 
 import mesquite.lib.*;
@@ -19,6 +19,7 @@ import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
 
 public class NexmlReader extends NexmlMesquiteManager {
+    private URI fileURI;
 	/**
 	 *
 	 * @param employerEmployee
@@ -27,6 +28,13 @@ public class NexmlReader extends NexmlMesquiteManager {
 		super(employerEmployee);
 	}
 
+    public void setFileURI (String path) {
+        try {
+            fileURI = new URI(path);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("This'll never work");
+        }
+    }
 	/**
 	 *
 	 * @param xmlDocument
