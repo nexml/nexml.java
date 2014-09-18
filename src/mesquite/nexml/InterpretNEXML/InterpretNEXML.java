@@ -53,7 +53,8 @@ public class InterpretNEXML extends FileInterpreterI {
 		} catch ( Exception e ) {
 			e.printStackTrace();
 		}	
-		NexmlReader nr = new NexmlReader(this);		
+		NexmlReader nr = new NexmlReader(this);
+        nr.setFileURI(file.getPath());
 	    nr.fillProjectFromNexml(xmlDocument,project);			
 	}		
 

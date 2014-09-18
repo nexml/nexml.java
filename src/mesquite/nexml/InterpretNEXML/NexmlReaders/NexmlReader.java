@@ -1,10 +1,12 @@
 package mesquite.nexml.InterpretNEXML.NexmlReaders;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Enumeration;
+import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
 import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import mesquite.lib.*;
 import mesquite.nexml.InterpretNEXML.NexmlMesquiteManager;
@@ -17,8 +19,10 @@ import org.nexml.model.Document;
 import org.nexml.model.Matrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
+import org.w3c.dom.ProcessingInstruction;
 
 public class NexmlReader extends NexmlMesquiteManager {
+    private URI fileURI;
 	/**
 	 *
 	 * @param employerEmployee
@@ -27,6 +31,13 @@ public class NexmlReader extends NexmlMesquiteManager {
 		super(employerEmployee);
 	}
 
+    public void setFileURI (String path) {
+        try {
+            fileURI = new URI(path);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("This'll never work");
+        }
+    }
 	/**
 	 *
 	 * @param xmlDocument
@@ -37,6 +48,42 @@ public class NexmlReader extends NexmlMesquiteManager {
         resetActiveNamespaceHandlers();
 		List<OTUs> xmlOTUsList = xmlDocument.getOTUsList();
 		MesquiteFile mesFile = mesProject.getFile(0);
+
+        LinkedList<String> stylesheets = new LinkedList<String>();
+        // look for stylesheets referred to in the document:
+        for (ProcessingInstruction stylesheet : xmlDocument.getStylesheets()) {
+            String pidata = stylesheet.getData();
+            Hashtable<String,String> tokens = new Hashtable<String, String>();
+            StringTokenizer pitokens = new StringTokenizer(pidata);
+            // parse the tokens
+            while (pitokens.hasMoreTokens()) {
+                String token = pitokens.nextToken();
+                Matcher m = Pattern.compile("(.*)=\\\"(.*?)\\\"").matcher(token);
+                m.matches();
+                if (m.matches()) {
+                    tokens.put(m.group(1),m.group(2));
+                }
+            }
+
+            if (tokens.containsKey("type")) {
+                if (tokens.get("type").equals("text/nexss")) {
+                    if (tokens.containsKey("href")) {
+                        try {
+                            String relpath = tokens.get("href");
+                            File ssfile = new File(relpath);
+                            if (!ssfile.canRead()) {
+                               File ssparent = new File(fileURI.getPath());
+                               ssfile = new File(ssparent.getParent(),relpath);
+                            }
+                            stylesheets.add(ssfile.getAbsolutePath());
+                        } catch (Exception e) {
+                            debug ("file not found: "+ tokens.get("href"));
+                        }
+                    }
+                }
+            }
+        }
+        setStylesheets(stylesheets);
 
 		// process taxa blocks
 		NexmlOTUsBlockReader nobr = new NexmlOTUsBlockReader(getEmployerEmployee());
