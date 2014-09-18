@@ -28,7 +28,7 @@ import com.osbcp.cssparser.*;
 public class NexSSHandler extends NamespaceHandler {
 	private List<Rule> mNexSSList;
 	private Hashtable mNexSSHash;
-    private File mNexSSFile;
+    private LinkedList<File> mNexSSFile;
     private Vector<PropertyValue> treeProperties;
     private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
@@ -39,71 +39,76 @@ public class NexSSHandler extends NamespaceHandler {
     public NexSSHandler() {
         super();
         mNexSSHash = new Hashtable();
-        try {
-            mNexSSFile = new File(mesquite.lib.MesquiteModule.mesquiteDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.nexss");
-        } catch (Exception e) {
-            if (e instanceof FileNotFoundException) {
-                MesquiteMessage.discreetNotifyUser("This NeXML file uses NexSS notation, but no NexSS file was found.");
-            }
+        String nexSSFilePath = mesquite.lib.MesquiteModule.mesquiteDirectory + mesquite.lib.MesquiteFile.fileSeparator + "default.nexss";
+        mNexSSFile = new LinkedList<File>();
+        LinkedList<String> stylesheets = NexmlMesquiteManager.getStylesheets();
+        mNexSSFile.add(new File(nexSSFilePath));
+        for (int i=0;i<stylesheets.size();i++) {
+            mNexSSFile.add(new File(stylesheets.get(i)));
         }
+
         Scanner scanner = null;
         String cssString = "";
-        try {
-            scanner = new Scanner(mNexSSFile);
-        } catch (Exception e) {
-            NexmlMesquiteManager.debug(e.toString());
-        }
-        while (scanner.hasNextLine()){
-            cssString = cssString + scanner.nextLine();
-        }
-        try {
-            mNexSSList = CSSParser.parse(cssString);
-        } catch (Exception e) {
-            NexmlMesquiteManager.debug(e.toString());
-        }
-        // store the rules in the hash:
-        for ( Rule r : mNexSSList) {
-            // we want to hash each rule as a value for each selector key separately.
-            List<Selector> selectors = r.getSelectors();
-            List<PropertyValue> pvs = r.getPropertyValues();
-            for (Selector selector : selectors) {
-                String selectorName = selector.toString();
-                String selectorSubClass = "";
+        for (int f=0;f<mNexSSFile.size();f++) {
+            File nexssfile = mNexSSFile.get(f);
+            try {
+                scanner = new Scanner(nexssfile);
+            } catch (Exception e) {
+                NexmlMesquiteManager.debug(e.toString());
+            }
+            while (scanner.hasNextLine()) {
+                cssString = cssString + scanner.nextLine();
+            }
+            try {
+                mNexSSList = CSSParser.parse(cssString);
+            } catch (Exception e) {
+                NexmlMesquiteManager.debug(e.toString());
+            }
+            // store the rules in the hash:
+            for (Rule r : mNexSSList) {
+                // we want to hash each rule as a value for each selector key separately.
+                List<Selector> selectors = r.getSelectors();
+                List<PropertyValue> pvs = r.getPropertyValues();
+                for (Selector selector : selectors) {
+                    String selectorName = selector.toString();
+                    String selectorSubClass = "";
 
-                String[] selectorParts = selector.toString().split("\\.");
-                if (selectorParts.length > 1) {  // this selector has subclasses
-                    selectorName = selectorParts[0];
-                    selectorSubClass = selectorParts[1];
-                }
-
-                selectorParts = selector.toString().split("\\[");
-                if (selectorParts.length > 1) {  // this selector has ranges
-                    selectorName = selectorParts[0];
-                    String min = "";
-                    String max = "";
-                    for (int i=1;i<selectorParts.length;i++) {
-                        String str = selectorParts[i].replace("]","");
-                        if (str.contains("min")) {
-                            min = str.replaceAll("min\\s*=","");
-                        } else if (str.contains("max")) {
-                            max = str.replaceAll("max\\s*=","");
-                        }
+                    String[] selectorParts = selector.toString().split("\\.");
+                    if (selectorParts.length > 1) {  // this selector has subclasses
+                        selectorName = selectorParts[0];
+                        selectorSubClass = selectorParts[1];
                     }
-                    selectorSubClass = min+"/"+max;
+
+                    selectorParts = selector.toString().split("\\[");
+                    if (selectorParts.length > 1) {  // this selector has ranges
+                        selectorName = selectorParts[0];
+                        String min = "";
+                        String max = "";
+                        for (int i = 1; i < selectorParts.length; i++) {
+                            String str = selectorParts[i].replace("]", "");
+                            if (str.contains("min")) {
+                                min = str.replaceAll("min\\s*=", "");
+                            } else if (str.contains("max")) {
+                                max = str.replaceAll("max\\s*=", "");
+                            }
+                        }
+                        selectorSubClass = min + "/" + max;
+                    }
+                    Hashtable subClassHash = (Hashtable) mNexSSHash.get(selectorName);
+                    if (subClassHash == null) {
+                        subClassHash = new Hashtable();
+                        mNexSSHash.put(selectorName, subClassHash);
+                    }
+                    if (selectorSubClass.isEmpty()) {
+                        selectorSubClass = Constants.NO_VALUE;
+                    }
+                    subClassHash.put(selectorSubClass, pvs);
                 }
-                Hashtable subClassHash = (Hashtable) mNexSSHash.get(selectorName);
-                if (subClassHash == null) {
-                    subClassHash = new Hashtable();
-                    mNexSSHash.put(selectorName, subClassHash);
-                }
-                if (selectorSubClass.isEmpty()) {
-                    selectorSubClass = Constants.NO_VALUE;
-                }
-                subClassHash.put(selectorSubClass,pvs);
             }
         }
         parseGeneralSelectors();
     }
+
 
 	/* (non-Javadoc)
 	 * @see mesquite.nexml.InterpretNEXML.PredicateHandler#getPrefix()
