@@ -30,7 +30,7 @@ public class NexSSHandler extends NamespaceHandler {
 	private Hashtable mNexSSHash;
     private LinkedList<File> mNexSSFile;
     private Vector<PropertyValue> treeProperties;
-    private Vector<PropertyValue> figureProperties;
+    private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
     public static final String NexSSPrefix = "nexss";
     public static final String NexSSURIString = "http://www.phylotastic.org/nexss#";
@@ -68,69 +68,44 @@ public class NexSSHandler extends NamespaceHandler {
             for (Rule r : mNexSSList) {
                 // we want to hash each rule as a value for each selector key separately.
                 List<Selector> selectors = r.getSelectors();
-
                 List<PropertyValue> pvs = r.getPropertyValues();
                 for (Selector selector : selectors) {
                     String selectorName = selector.toString();
                     String selectorSubClass = "";
-                    StringTokenizer selectorTokens = new StringTokenizer(selectorName);
-                    // each token is either the first selector or the descent.
-                    while (selectorTokens.hasMoreTokens()) {
-                        String selectorToken = selectorTokens.nextToken();
-//                        node[nexss:posterior_prob>=91][nexss:posterior_prob<=100]
-//                        String[] selectorConditionals = selectorToken.toString().split("\\.");
-//                        if (selectorConditionals.length > 1) {  // this selector has subclasses
-//                            selectorName = selectorConditionals[0];
-//                            selectorSubClass = selectorConditionals[1];
-//                        }
 
-                        String[] selectorConditionals = selectorToken.toString().split("\\[");
-                        if (selectorConditionals.length > 1) {  // this selector has conditionals
-                            selectorName = selectorConditionals[0];
-//                            String min = "";
-//                            String max = "";
-                            for (int i = 1; i < selectorConditionals.length; i++) {
-                                String str = selectorConditionals[i].replace("]", "");
-//                                if (str.contains("min")) {
-//                                    min = str.replaceAll("min\\s*=", "");
-//                                } else if (str.contains("max")) {
-//                                    max = str.replaceAll("max\\s*=", "");
-//                                }
-                                String[] selectorConditionalFrags = str.toString().split("=");
-                                if (selectorConditionalFrags.length > 1) {
-                                    // move the last char of the first half to be the operator
-                                    String property = selectorConditionalFrags[0].substring(0,selectorConditionalFrags[0].length()-1);
-                                    String operator = selectorConditionalFrags[0].substring(selectorConditionalFrags[0].length()-1);
-                                    String condition = selectorConditionalFrags[1];
-                                    if (operator.matches("\\W")) {
-                                        operator = "="+operator;
-                                    } else {
-                                        property = property + operator;
-                                        operator = "==";
-                                    }
-//                                    NexmlMesquiteManager.debug("selector " + selectorName + " has conditional " + property + " /"+operator+"/ " + condition);
-                                    selectorName = property;
-                                    selectorSubClass = operator+condition;
-                                }
-                            }
-//                            selectorSubClass = min + "/" + max;
-                        }
-                        Hashtable subClassHash = (Hashtable) mNexSSHash.get(selectorName);
-                        if (subClassHash == null) {
-                            subClassHash = new Hashtable();
-                            mNexSSHash.put(selectorName, subClassHash);
-                        }
-                        if (selectorSubClass.isEmpty()) {
-                            selectorSubClass = Constants.NO_VALUE;
-                        }
-
-                        subClassHash.put(selectorSubClass, pvs);
+                    String[] selectorParts = selector.toString().split("\\.");
+                    if (selectorParts.length > 1) {  // this selector has subclasses
+                        selectorName = selectorParts[0];
+                        selectorSubClass = selectorParts[1];
                     }
+
+                    selectorParts = selector.toString().split("\\[");
+                    if (selectorParts.length > 1) {  // this selector has ranges
+                        selectorName = selectorParts[0];
+                        String min = "";
+                        String max = "";
+                        for (int i = 1; i < selectorParts.length; i++) {
+                            String str = selectorParts[i].replace("]", "");
+                            if (str.contains("min")) {
+                                min = str.replaceAll("min\\s*=", "");
+                            } else if (str.contains("max")) {
+                                max = str.replaceAll("max\\s*=", "");
+                            }
+                        }
+                        selectorSubClass = min + "/" + max;
+                    }
+                    Hashtable subClassHash = (Hashtable) mNexSSHash.get(selectorName);
+                    if (subClassHash == null) {
+                        subClassHash = new Hashtable();
+                        mNexSSHash.put(selectorName, subClassHash);
+                    }
+                    if (selectorSubClass.isEmpty()) {
+                        selectorSubClass = Constants.NO_VALUE;
+                    }
+                    subClassHash.put(selectorSubClass, pvs);
                 }
             }
         }
-        NexmlMesquiteManager.debug("selector hash has " + mNexSSHash.keySet().toString());
-        NexmlMesquiteManager.debug("selector hash has " + mNexSSHash.values().toString());
         parseGeneralSelectors();
     }
 
@@ -158,12 +133,12 @@ public class NexSSHandler extends NamespaceHandler {
 	public
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
-		String nexSSClass = getPredicate();
+		String nexSSClass = parts[1];
 
         Object convertedValue = mesquiteNodeAnnotation(nexSSClass, getValue().toString());
         Object pred = getPredicate();
         if (convertedValue.equals(Constants.NO_RULE)) {
-//            NexmlMesquiteManager.debug ("couldn't find NexSS rule " + pred.toString()+" with value "+getValue().toString());
+            NexmlMesquiteManager.debug ("couldn't find NexSS rule " + pred.toString()+" with value "+getValue().toString());
             // no rule specified
         } else {
             String[] mesProps = convertedValue.toString().split(";");
@@ -207,15 +182,15 @@ public class NexSSHandler extends NamespaceHandler {
         BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
         BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
 
-        // tell the treeDrawCoordinator to set figure settings:
+        // tell the treeDrawCoordinator to set canvas settings:
         treeWindowMaker.doCommand("suppressEPCResponse","",cc);
         treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
 
-        if (figureProperties != null) {
+        if (canvasProperties != null) {
             Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
             int width = dim.width;
             int height = dim.height;
-            for (PropertyValue pv : figureProperties) {
+            for (PropertyValue pv : canvasProperties) {
                 if (pv.getProperty().equalsIgnoreCase("background-color")) {
                     //set the color to the standard color
 					treeDrawCoordinator.doCommand("setBackground", pv.getValue(), cc);
@@ -269,7 +244,7 @@ public class NexSSHandler extends NamespaceHandler {
         // execute the treeDrawer commands in order:
         DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("getTreeDrawer","",cc);
         if (layout != null) {
-//            NexmlMesquiteManager.debug("treeDrawer is "+ treeDrawer.toString()+", layout is "+layout.toString());
+            NexmlMesquiteManager.debug("treeDrawer is "+ treeDrawer.toString()+", layout is "+layout.toString());
             if (isTreeDrawerAvailable(layout)) {
                 treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#"+layout, cc);
             }
@@ -333,7 +308,6 @@ public class NexSSHandler extends NamespaceHandler {
             MesquiteMessage.notifyProgrammer("NexSS class "+nexSSClassName+" not found");
             return null;
         }
-        NexmlMesquiteManager.debug ("found class " + nexSSClassName + " with value "+ nexSSValue);
         List<PropertyValue> pvs = null;
         if (nexSSValue.isEmpty()) {
             nexSSValue = Constants.NO_VALUE;
@@ -356,7 +330,7 @@ public class NexSSHandler extends NamespaceHandler {
                 if (keyParts.length>1) {
                     double min = Double.parseDouble(keyParts[0]);
                     double max = Double.parseDouble(keyParts[1]);
-//                    NexmlMesquiteManager.debug("looking at val="+val+", min="+min+", max="+max+" from key "+key);
+                    NexmlMesquiteManager.debug("looking at val="+val+", min="+min+", max="+max+" from key "+key);
                     if ((val>=min) && (val<=max)) {
                         pvs = (List)((Hashtable)hashvalue).get(key);
                         break;
@@ -430,7 +404,7 @@ public class NexSSHandler extends NamespaceHandler {
 	}
 
     private String mesquiteNodeAnnotation (String nexSSClass, String nexSSValue ) {
-		String formatted_pvs = nexSSClass+ "=" +nexSSValue;
+		String formatted_pvs = "nexss:"+nexSSClass+ "=" +nexSSValue;
         List<PropertyValue> pvs = getClass(nexSSClass, nexSSValue);
         if (pvs == null) {
             return Constants.NO_RULE;
@@ -518,29 +492,29 @@ public class NexSSHandler extends NamespaceHandler {
         return mesColor;
     }
 
-    //    parses the general selectors "figure," "tree," and "scale"
+    //    parses the general selectors "canvas," "tree," and "scale"
     private void parseGeneralSelectors () {
-        figureProperties = new Vector<PropertyValue>();
+        canvasProperties = new Vector<PropertyValue>();
         treeProperties = new Vector<PropertyValue>();
         scaleProperties = new Vector<PropertyValue>();
-        List<PropertyValue> pvs = getClass ("figure", "");
+        List<PropertyValue> pvs = getClass ("canvas", "");
         if (pvs != null) {
             for (PropertyValue pv : pvs) {
                 if (pv.getProperty().equalsIgnoreCase("background-color")) {
-                    //Mesquite can only handle setting the color of the figure. Ignore everything else.
-                    figureProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
+                    //Mesquite can only handle setting the color of the canvas. Ignore everything else.
+                    canvasProperties.add(new PropertyValue("background-color", convertToMesColorName(pv.getValue())));
                 } else if (pv.getProperty().equalsIgnoreCase("font-family")) {
                     String fontFamily = chooseAFont(pv.getValue());
-                    figureProperties.add(new PropertyValue("font-family", fontFamily));
+                    canvasProperties.add(new PropertyValue("font-family", fontFamily));
                 } else if (pv.getProperty().equalsIgnoreCase("font-size")) {
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_FONT_SIZE);
-                    figureProperties.add(new PropertyValue("font-size", String.valueOf(value)));
+                    canvasProperties.add(new PropertyValue("font-size", String.valueOf(value)));
                 } else if (pv.getProperty().equalsIgnoreCase("height")) {
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_HEIGHT);
-                    figureProperties.add(new PropertyValue("height", String.valueOf(value)));
+                    canvasProperties.add(new PropertyValue("height", String.valueOf(value)));
                 } else if (pv.getProperty().equalsIgnoreCase("width")) {
                     int value = convertToPixels(pv.getValue(),Constants.DEFAULT_CANVAS_WIDTH);
-                    figureProperties.add(new PropertyValue("width", String.valueOf(value)));
+                    canvasProperties.add(new PropertyValue("width", String.valueOf(value)));
                 }
             }
         }
