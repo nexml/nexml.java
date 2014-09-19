@@ -2,10 +2,7 @@ package mesquite.nexml.InterpretNEXML;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.*;
 import java.net.URI;
 
 import mesquite.lib.*;
@@ -22,7 +19,7 @@ import mesquite.nexml.InterpretNEXML.AnnotationHandlers.PredicateHandlerImpl;
 public class NexmlMesquiteManager {
 	private Properties mPredicateHandlerMapping;
 	private Properties mNamespaceHandlerMapping;
-
+    protected static LinkedList<String> mStylesheets;
 	private static Hashtable mActiveNamespaceHandlers;
 	private EmployerEmployee mEmployerEmployee;
 
@@ -64,6 +61,14 @@ public class NexmlMesquiteManager {
 
     public static void notify(String s) {
             mesquite.lib.MesquiteMessage.notifyProgrammer(s);
+    }
+
+    public static LinkedList<String> getStylesheets () {
+        return mStylesheets;
+    }
+
+    public static void setStylesheets (LinkedList<String> ss) {
+        mStylesheets = ss;
     }
 
 

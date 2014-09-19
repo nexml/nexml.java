@@ -47,6 +47,38 @@ bootstrap[min=91][max=100] {
 	font-size: 200%;
 }
 
+bootstrap[min=0.9][max=1.0] {
+	border: 10px;
+	font-style: italic;
+	font-size: 200%;
+}
+
+/*
+      <node about="#node746" id="node746" label="">
+        <meta content="0.97" datatype="xsd:string" id="meta748" property="tss:bootstrap" xsi:type="nex:LiteralMeta"/>
+      </node>
+      <node id="node750" label="NMY 11141" otu="otu38">
+        <meta content="Y" datatype="xsd:string" id="meta01" property="tss:chromosome" xsi:type="nex:LiteralMeta"/>
+        <meta content="SANG" datatype="xsd:string" id="meta01" property="tss:sequence_type" xsi:type="nex:LiteralMeta"/>
+      </node>
+ */
+chromosome.Y {
+	color: blue;
+}
+
+chromosome.X {
+	color: red;
+}
+
+sequence_type.SANG {
+	color: bold;
+}
+
+sequence_type.TRAM {
+	color: italic;
+}
+
+
 majortransition {
 	border: 5px green solid;
 }
@@ -58,3 +90,4 @@ colored_branch {
 clade {
     collapsed: true;
 }
+
