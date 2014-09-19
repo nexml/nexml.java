@@ -405,7 +405,7 @@ public class NexSSHandler extends NamespaceHandler {
         return new_pvs;
 	}
 
-<<<<<<< HEAD:src/mesquite/nexml/InterpretNEXML/AnnotationHandlers/TSSHandler.java
+
     private String mesquiteNodeAnnotation (String tssClass, String tssValue ) {
     	String formatted_pvs = "tss:"+tssClass+ "=" +tssValue;
     	List<PropertyValue> pvs = getClass(tssClass, tssValue);
