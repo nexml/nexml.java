@@ -22,12 +22,16 @@ import org.nexml.model.MolecularMatrix;
 import org.nexml.model.OTUs;
 import org.nexml.model.TreeBlock;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 
 public class DocumentImpl extends AnnotatableImpl implements Document {
 	private List<OTUs> mOtusList = new ArrayList<OTUs>();
 	private List<Matrix<?>> mMatrixList = new ArrayList<Matrix<?>>();
 	private List<TreeBlock> mTreeBlockList = new ArrayList<TreeBlock>();
 	public static Collection<String> characterNames = new ArrayList<String>(); // XXX THIS IS WRONG!
+    private List<ProcessingInstruction> mStylesheets = new ArrayList<ProcessingInstruction>();
 
     /**
      * Protected constructors that take a DOM document object but not
@@ -60,7 +64,18 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 		super(document, element);
 		if ( ! element.getOwnerDocument().equals(document) ) {
 			throw new RuntimeException("This'll never work");
-		}		
+		}
+
+        NodeList children = document.getChildNodes();
+        for (int i=0; i<children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
+                ProcessingInstruction pichild = (ProcessingInstruction) child;
+                if (pichild.getTarget().equals("xml-stylesheet")) {
+                    mStylesheets.add(pichild);
+                }
+            }
+        }
 
 		List<Element> oTUsElements = getChildrenByTagName(element, OTUsImpl.getTagNameClass());
 
@@ -266,6 +281,10 @@ public class DocumentImpl extends AnnotatableImpl implements Document {
 		}
 		return stringWriter.getBuffer().toString();
 	}
+
+    public List<ProcessingInstruction> getStylesheets() {
+        return mStylesheets;
+    }
 
 	/*
 	 * (non-Javadoc)

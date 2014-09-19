@@ -89,7 +89,6 @@ public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
 	 * 
 	 * @param mesData
 	 * @param xmlMatrix
-	 * @param xmlCharacterStateSet
 	 */
 	@SuppressWarnings("unchecked")
 	private void writeCharacterStates(CharacterData mesData, org.nexml.model.Matrix<?> xmlMatrix) {
