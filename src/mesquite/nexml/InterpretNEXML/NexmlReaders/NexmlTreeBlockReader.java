@@ -62,6 +62,15 @@ public class NexmlTreeBlockReader extends NexmlBlockReader {
 
                 // populate the tree from the root to the tips, recursively
                 Node xmlRoot = ((org.nexml.model.Tree<?>)xmlNetwork).getRoot();
+                if ( xmlRoot == null ) {
+                    Root: for ( Node xmlNode : xmlNetwork.getNodes() ) {
+                       Set<Node> xmlInNodes = xmlNetwork.getInNodes(xmlNode);
+                        if ( xmlInNodes.size() == 0 ) {
+                            xmlRoot = xmlNode;
+                            break Root;
+                        }
+                    }
+                }
                 Map<Integer,Integer> otuLookup = new HashMap<Integer,Integer>();
                 readTree(xmlNetwork, xmlRoot, mesTree, mesTree.getRoot(), otuLookup);
 
@@ -85,7 +94,6 @@ public class NexmlTreeBlockReader extends NexmlBlockReader {
      * 
      * @param xmlTree
      * @param xmlNode
-     * @param xmlChildren
      * @param mesNode
      * @param mesTree
      */
