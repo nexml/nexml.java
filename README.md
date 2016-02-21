@@ -71,7 +71,7 @@ the maven repository on the nexml web server, i.e. in your pom.xml do something 
 		<repository>
 			<id>m2.nexml.repos</id>
 			<name>NeXML Remote Repository</name>
-			<url>http://nexml-dev.nescent.org/.m2/repository</url>
+			<url>http://nexml.github.io/maven/repository</url>
 		</repository>		
 		
 		<!-- .... and further down.... --->
