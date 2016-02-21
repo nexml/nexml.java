@@ -10,6 +10,7 @@ import org.nexml.model.Character;
 import org.nexml.model.CharacterState;
 import org.nexml.model.CharacterStateSet;
 import org.nexml.model.OTU;
+import org.nexml.model.Subset;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -59,6 +60,13 @@ MatrixImpl<CharacterState> implements CategoricalMatrix {
 
 		for ( Element characterElement : getChildrenByTagName( getFormatElement(), CharacterImpl.getTagNameClass() ) ) {
 			createCharacter(characterElement);
+		}
+		
+		for (Element setElement : getChildrenByTagName(getFormatElement(), SubsetImpl.getTagNameClass())) {
+			String name = setElement.getAttribute("id");
+			for (String charID : setElement.getAttribute("char").split(getSplitString(), -1)) {
+				addToSubset(name, getThingById(charID));
+			}
 		}
 
 		for ( Element row : getChildrenByTagName( getMatrixElement(), "row") ) {
