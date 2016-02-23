@@ -8,10 +8,10 @@ for the following subprojects:
 consists of interfaces in the `org.nexml.model` package and implementations thereof in 
 the `org.nexml.model.impl` package.
 
-* `src/mesquite/` contains classes for (mesquite)[http://mesquiteproject.org]. These 
+* `src/mesquite/` contains classes for [mesquite](http://mesquiteproject.org). These 
 classes depend on the `org.nexml.model.*` architecture.
 
-* `src/validator/` contains a (Xerces-J)[http://xerces.apache.org/xerces-j/]-based
+* `src/validator/` contains a [Xerces-J](http://xerces.apache.org/xerces-j/)-based
 XML validator (written by Terri Liebowitz of the San Diego Supercomputing Center, with 
 modifications by Mark Holder) and a ValidateNeXML class that does essentially the same 
 thing, but more tailored to NeXML specifically.
@@ -19,7 +19,7 @@ thing, but more tailored to NeXML specifically.
 * `src/transformer/` contains a class that transforms NeXML documents into CDAO documents 
 using the xslt stylesheets found in $NEXML_ROOT/xslt.
 
-* `test/` contains (JUnit4)[http://www.junit.org/] tests for the `org.nexml.model` API. 
+* `test/` contains [JUnit4](http://www.junit.org/) tests for the `org.nexml.model` API. 
 Some of the tests attempt to parse files from the $NEXML_ROOT/examples folder.
 
 * `jars/` contains dependencies for the code in the src/ and test/ folders. As of 1 Sept 
@@ -27,7 +27,7 @@ Some of the tests attempt to parse files from the $NEXML_ROOT/examples folder.
 testing), the Xerces jar (for the validator), and the saxon jar (for the transformer).
 
 * `resources/` contains an example classpaths.xml file for mesquite's 
-(system for loading other projects)[http://mesquiteproject.org/mesquite/download/source.html#classPaths].
+[system for loading other projects](http://mesquiteproject.org/mesquite/download/source.html#classPaths).
 		
 * `build.sh` is a simple shell script that invokes ant, using the `build.xml` to build and 
 install the NeXML/Java deliverables on the NeXML website (i.e. you probably don't need to 
