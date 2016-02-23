@@ -81,7 +81,6 @@ the maven repository on the nexml web server, i.e. in your pom.xml do something 
 			<artifactId>nexml</artifactId>
 			<version>1.5-SNAPSHOT</version>
 		</dependency>
-		</pre>
 	
 * `test` - this target runs JUnit tests on the core nexml library.  To run these, the
 NEXML_ROOT environment variable needs to point at the folder which contains the examples 
