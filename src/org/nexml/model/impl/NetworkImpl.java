@@ -166,7 +166,9 @@ abstract class NetworkImpl<E extends Edge> extends SetManagerImpl<NetworkObject>
 		Set<Node> sourceNodes = new HashSet<Node>();
 		for (Edge edge : getEdges()) {
 			if (edge.getTarget().equals(target)) {
-				sourceNodes.add(edge.getSource());
+                if ( edge.getSource() != null ) {
+				    sourceNodes.add(edge.getSource());
+                }
 			}
 		}
 		return sourceNodes;

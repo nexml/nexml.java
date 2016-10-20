@@ -3,5 +3,6 @@
 .project
 .settings
 bin
-
-.idea/workspace.xml
+*.idea/*
+nexml.iml
+/target/

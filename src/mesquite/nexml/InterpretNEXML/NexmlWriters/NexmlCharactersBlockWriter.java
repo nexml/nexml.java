@@ -123,13 +123,19 @@ public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
 			}
 			xmlCharacters.add(xmlChar);
 		}
+		
+		// iterate over taxa
 		for (int taxonIndex = 0; taxonIndex < mesData.getNumTaxa(); taxonIndex++) {
 			CharacterState[] mesCharStates = mesData.getCharacterStateArray(taxonIndex, 0, mesNchar);
 			Taxon mesTaxon = mesData.getTaxa().getTaxon(taxonIndex);
 			OTU xmlTaxon = findEquivalentTaxon(mesTaxon,xmlMatrix.getOTUs());    			
+			
+			// iterate over characters
 			for ( int characterIndex = 0; characterIndex < mesNchar; characterIndex++ ) {
 				Character xmlChar = xmlCharacters.get(characterIndex);
 				CharacterState mesState = mesCharStates[characterIndex];
+				
+				// data are "standard"
 				if (mesDataType.equalsIgnoreCase(CategoricalData.DATATYPENAME)) {
 					CharacterStateSet xmlStateSet = xmlChar.getCharacterStateSet();
 					CategoricalData categoricalData = (CategoricalData)mesData;
@@ -154,13 +160,22 @@ public class NexmlCharactersBlockWriter extends NexmlBlockWriter {
 					if (xmlCharacterState != null) {
 						MatrixCell<org.nexml.model.CharacterState> xmlCell = (MatrixCell<org.nexml.model.CharacterState>) xmlMatrix.getCell(xmlTaxon, xmlChar);
 						xmlCell.setValue(xmlCharacterState);
-					}
-				} else if (mesDataType.equalsIgnoreCase(ContinuousData.DATATYPENAME)) {
+					}									
+				} 
+				
+				// data are continuous
+				else if (mesDataType.equalsIgnoreCase(ContinuousData.DATATYPENAME)) {
 					MatrixCell<Double> xmlCell = (MatrixCell<Double>) xmlMatrix.getCell(xmlTaxon,xmlChar);
 					xmlCell.setValue((Double)xmlMatrix.parseSymbol(mesState.toDisplayString(), xmlChar));
-				} else if ( xmlMolecularDataTypeFor.containsKey(mesDataType) ) {
+				}
+				
+				// data are molecular
+				else if ( xmlMolecularDataTypeFor.containsKey(mesDataType) ) {
 					MatrixCell<org.nexml.model.CharacterState> xmlCell = (MatrixCell<org.nexml.model.CharacterState>) xmlMatrix.getCell(xmlTaxon,xmlChar);
-					xmlCell.setValue((org.nexml.model.CharacterState)((MolecularMatrix)xmlMatrix).parseSymbol(mesState.toDisplayString(), xmlMolecularDataTypeFor.get(mesDataType)));
+					
+					// https://github.com/nexml/nexml.java/issues/14
+					String mesSymbol = ((CategoricalState)mesState).toNEXUSString();
+					xmlCell.setValue((org.nexml.model.CharacterState)((MolecularMatrix)xmlMatrix).parseSymbol(mesSymbol, xmlMolecularDataTypeFor.get(mesDataType)));
 				}   
 			}    			
 		}
