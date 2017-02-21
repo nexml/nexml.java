@@ -17,8 +17,6 @@ import mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator;
 import mesquite.trees.BasicTreeWindowCoord.BasicTreeWindowCoord;
 import mesquite.trees.BasicTreeWindowMaker.BasicTreeWindowMaker;
 import mesquite.trees.NodeLocsStandard.NodeLocsStandard;
-import org.nexml.model.Annotatable;
-import org.nexml.model.Annotation;
 
 import com.osbcp.cssparser.*;
 
@@ -34,7 +32,6 @@ public class TSSHandler extends NamespaceHandler {
     private Vector<PropertyValue> treeProperties;
     private Vector<PropertyValue> canvasProperties;
     private Vector<PropertyValue> scaleProperties;
-    private boolean generalSelectorsHaveInitialized = false;
     public static final String TSSPrefix = "tss";
     public static final String TSSURIString = "http://mesquiteproject.org/tss#";
 
@@ -92,18 +89,17 @@ public class TSSHandler extends NamespaceHandler {
                             max = str.replaceAll("max\\s*=","");
                         }
                     }
-                    selectorSubClass = min+"."+max;
+                    selectorSubClass = min+"/"+max;
                 }
-                if (selectorSubClass.isEmpty()) {
-                    mTSSHash.put(selectorName, pvs);
-                } else {
-                    Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
-                    if (subClassHash == null) {
-                        subClassHash = new Hashtable();
-                    }
-                    subClassHash.put(selectorSubClass,pvs);
+                Hashtable subClassHash = (Hashtable) mTSSHash.get(selectorName);
+                if (subClassHash == null) {
+                    subClassHash = new Hashtable();
                     mTSSHash.put(selectorName,subClassHash);
                 }
+                if (selectorSubClass.isEmpty()) {
+                    selectorSubClass = Constants.NO_VALUE;
+                }
+                subClassHash.put(selectorSubClass,pvs);
             }
         }
         parseGeneralSelectors();
@@ -133,14 +129,11 @@ public class TSSHandler extends NamespaceHandler {
 	void read(Associable associable, Listable listable, int index) {
 		String[] parts = getPredicate().split(":");
 		String tssClass = parts[1];
-		String value = getValue().toString();
-        String newValue = mesquiteNodeAnnotation(tssClass, value);
-        setValue(newValue);
 
-        Object convertedValue = getValue();
+        Object convertedValue = mesquiteNodeAnnotation(tssClass, getValue().toString());
         Object pred = getPredicate();
         if (convertedValue.equals(Constants.NO_RULE)) {
-            MesquiteMessage.discreetNotifyUser ("couldn't find TSS rule " + pred.toString());
+            NexmlMesquiteManager.debug ("couldn't find TSS rule " + pred.toString()+" with value "+getValue().toString());
             // no rule specified
         } else {
             String[] mesProps = convertedValue.toString().split(";");
@@ -183,21 +176,16 @@ public class TSSHandler extends NamespaceHandler {
         Commandable treeWindow = (Commandable) treeWindowMaker.doCommand("getTreeWindow", Integer.toString(1), cc);
         BasicTreeDrawCoordinator treeDrawCoordinator = (BasicTreeDrawCoordinator) treeWindow.doCommand("getTreeDrawCoordinator", "#mesquite.trees.BasicTreeDrawCoordinator.BasicTreeDrawCoordinator", cc);
         BasicDrawTaxonNames taxonNames = (BasicDrawTaxonNames) treeDrawCoordinator.doCommand("getEmployee","#mesquite.trees.BasicDrawTaxonNames.BasicDrawTaxonNames");
-        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#mesquite.trees.SquareTree.SquareTree", cc);
-        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
-
-
-        treeWindowMaker.doCommand("suppressEPCResponse","",cc);
-        treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
-        nodeLocs.doCommand("toggleCenter","on",cc);
 
         // tell the treeDrawCoordinator to set canvas settings:
+        treeWindowMaker.doCommand("suppressEPCResponse","",cc);
+        treeWindowMaker.doCommand("setTreeSource","#mesquite.trees.StoredTrees.StoredTrees",cc);
+
         if (canvasProperties != null) {
             Dimension dim = (Dimension) treeWindow.doCommand("getTreePaneSize","",cc);
             int width = dim.width;
             int height = dim.height;
             for (PropertyValue pv : canvasProperties) {
-                MesquiteMessage.notifyProgrammer("setting canvasProperty "+pv.toString());
                 if (pv.getProperty().equalsIgnoreCase("background-color")) {
                     //set the color to the standard color
 					treeDrawCoordinator.doCommand("setBackground", pv.getValue(), cc);
@@ -214,37 +202,71 @@ public class TSSHandler extends NamespaceHandler {
             treeWindow.doCommand("setSize", width+" "+height, cc);
         }
 
+        String layout = null;
+        String borderWidth = null;
+        String borderColor = null;
+        String branchLengthsToggle = null;
+        String tipOrientation = null;
+
         if (treeProperties != null) {
             for (PropertyValue pv : treeProperties) {
                 if (pv.getProperty().equalsIgnoreCase("layout")) {
-                    //this isn't implemented yet
+                    if (pv.getValue().equalsIgnoreCase("rectangular")) {
+                        layout = "mesquite.trees.StyledSquareTree.StyledSquareTree";
+                    } else if (pv.getValue().equalsIgnoreCase("diagonal")) {
+                        layout = "mesquite.trees.DiagonalDrawTree.DiagonalDrawTree";
+                    } else if (pv.getValue().equalsIgnoreCase("circular")) {
+                        layout = "mesquite.ornamental.CircularTree.CircularTree";
+                    }
                 } else if (pv.getProperty().equalsIgnoreCase("border-width")) {
-                    String borderWidth = pv.getValue();
-					treeDrawer.doCommand("setStemWidth", borderWidth, cc);
-					treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
+                    borderWidth = pv.getValue();
                 } else if (pv.getProperty().equalsIgnoreCase("border-color")) {
-					treeDrawer.doCommand("setBranchColor", pv.getValue(), cc);
+                    borderColor = pv.getValue();
                 } else if (pv.getProperty().equalsIgnoreCase("border-style")) {
                 	// this isn't implemented yet
                 } else if (pv.getProperty().equalsIgnoreCase("scaled")) {
                 	if (pv.getValue().equalsIgnoreCase("true")) {
-						nodeLocs.doCommand("branchLengthsToggle", "on", cc);
+                        branchLengthsToggle = "on";
 					} else {
-						nodeLocs.doCommand("branchLengthsToggle", "off", cc);
+                        branchLengthsToggle = "off";
 					}
                 } else if (pv.getProperty().equalsIgnoreCase("tip-orientation")) {
-                    String tipOrientation = pv.getValue();
-					if (tipOrientation.equalsIgnoreCase("up")) {
-						treeDrawer.doCommand("orientUP","",cc);
-					} else if (tipOrientation.equalsIgnoreCase("left")) {
-						treeDrawer.doCommand("orientLEFT","",cc);
-					} else if (tipOrientation.equalsIgnoreCase("right")) {
-						treeDrawer.doCommand("orientRIGHT","",cc);
-					} else if (tipOrientation.equalsIgnoreCase("down")) {
-						treeDrawer.doCommand("orientDOWN","",cc);
-					}
+                    tipOrientation = pv.getValue();
                 }
             }
+        }
+
+        // execute the treeDrawer commands in order:
+        DrawTree treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("getTreeDrawer","",cc);
+        if (layout != null) {
+            NexmlMesquiteManager.debug("treeDrawer is "+ treeDrawer.toString()+", layout is "+layout.toString());
+            if (isTreeDrawerAvailable(layout)) {
+                treeDrawer = (DrawTree) treeDrawCoordinator.doCommand("setTreeDrawer", "#"+layout, cc);
+            }
+        }
+        if (borderWidth != null) {
+            treeDrawer.doCommand("setStemWidth", borderWidth, cc);
+            treeDrawer.doCommand("setEdgeWidth", borderWidth, cc);
+        }
+        if (borderColor != null) {
+            treeDrawer.doCommand("setBranchColor", borderColor, cc);
+        }
+        if (tipOrientation != null) {
+            if (tipOrientation.equalsIgnoreCase("up")) {
+                treeDrawer.doCommand("orientUP","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("left")) {
+                treeDrawer.doCommand("orientLEFT","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("right")) {
+                treeDrawer.doCommand("orientRIGHT","",cc);
+            } else if (tipOrientation.equalsIgnoreCase("down")) {
+                treeDrawer.doCommand("orientDOWN","",cc);
+            }
+        }
+
+        NodeLocsStandard nodeLocs = (NodeLocsStandard) treeDrawer.doCommand("setNodeLocs","#mesquite.trees.NodeLocsStandard.NodeLocsStandard",cc);
+        nodeLocs.doCommand("toggleCenter","on",cc);
+        if (branchLengthsToggle != null) {
+            nodeLocs.doCommand("branchLengthsToggle", branchLengthsToggle, cc);
         }
 
         if (scaleProperties != null) {
@@ -278,32 +300,45 @@ public class TSSHandler extends NamespaceHandler {
     private List<PropertyValue> getClass (String tssClassName, String tssValue) {
 		Object hashvalue = mTSSHash.get(tssClassName);
         if (hashvalue == null) {
-            MesquiteMessage.discreetNotifyUser("TSS class "+tssClassName+" not found");
+            MesquiteMessage.notifyProgrammer("TSS class "+tssClassName+" not found");
             return null;
         }
-        List<PropertyValue> pvs;
-        if (hashvalue.getClass()==Hashtable.class) {
-            // check the tssValue to see if it's a string
-            pvs = (List)((Hashtable)hashvalue).get(tssValue);
+        List<PropertyValue> pvs = null;
+        if (tssValue.isEmpty()) {
+            tssValue = Constants.NO_VALUE;
+        }
+        // check the tssValue to see if it's a string
+        pvs = (List)((Hashtable)hashvalue).get(tssValue);
+        if (pvs == null) {
+            // is tssValue a number? because maybe it's in a range.
+            double val = 0;
+            try {
+                val = Double.parseDouble(tssValue);
+            } catch (Exception ex) {
+                MesquiteMessage.notifyProgrammer("couldn't parse the number "+tssValue);
+                // if it's not a number, there aren't any more types of classes this could be.
+            }
 
-            // check to see if the value is in a range
-            if (pvs == null) {
-                for (Enumeration e = ((Hashtable) hashvalue).keys(); e.hasMoreElements();) {
-                    String key = (String) e.nextElement();
-                    String[] keyParts = key.split("\\.");
-                    int min = Integer.parseInt(keyParts[0]);
-                    int max = Integer.parseInt(keyParts[1]);
-                    int val = Integer.parseInt(tssValue);
+            for (Enumeration e = ((Hashtable) hashvalue).keys(); e.hasMoreElements();) {
+                String key = (String) e.nextElement();
+                String[] keyParts = key.split("\\/");
+                if (keyParts.length>1) {
+                    double min = Double.parseDouble(keyParts[0]);
+                    double max = Double.parseDouble(keyParts[1]);
+                    NexmlMesquiteManager.debug("looking at val="+val+", min="+min+", max="+max+" from key "+key);
                     if ((val>=min) && (val<=max)) {
                         pvs = (List)((Hashtable)hashvalue).get(key);
+                        break;
                     }
                 }
             }
-        } else {
-            pvs = (List) hashvalue;
         }
         if (pvs == null) {
-            return null;
+            // there might be a default key; do one last check for that. If it fails, return null.
+            pvs = (List)((Hashtable)hashvalue).get(Constants.NO_VALUE);
+            if (pvs == null) {
+                return null;
+            }
         }
         Vector<PropertyValue> new_pvs = new Vector<PropertyValue>();
         // process the compound properties into single properties.
@@ -318,7 +353,7 @@ public class TSSHandler extends NamespaceHandler {
                 String[] split_pvs = pv.getValue().split(" ",2);
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
+                    MesquiteMessage.notifyProgrammer("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 if (split_pvs[0].matches("^\\D.*")) { // if this value is not a number, then we have a font-style
@@ -327,7 +362,7 @@ public class TSSHandler extends NamespaceHandler {
                 }
                 if (split_pvs.length != 2) {
                     // something bad happened here, don't add these font properties
-                    MesquiteMessage.discreetNotifyUser("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
+                    MesquiteMessage.notifyProgrammer("Poorly formed font property ("+pv.getValue()+"), should have [font-style] font-size font-family.");
                     continue;
                 }
                 fontSize = split_pvs[0];
@@ -371,7 +406,8 @@ public class TSSHandler extends NamespaceHandler {
         }
         for (PropertyValue pv : pvs) {
 			String val = pv.getValue();
-			val = val.replaceAll("value|VALUE", tssValue);
+
+            val = val.replaceAll("value|VALUE", tssValue);
             if (pv.getProperty().equals("border-color")) {
                 formatted_pvs = formatted_pvs + ";" + "color:" + convertToMesColorNumber(val);
 			} else if (pv.getProperty().equals("border-width")) {
@@ -384,7 +420,7 @@ public class TSSHandler extends NamespaceHandler {
 				}
 			}
 		}
-		NexmlMesquiteManager.debug("converted to Mesquite annotation " + formatted_pvs);
+		NexmlMesquiteManager.debug(pvs.toString() + " converted to Mesquite annotation " + formatted_pvs);
 		return formatted_pvs;
 	}
 
@@ -523,5 +559,16 @@ public class TSSHandler extends NamespaceHandler {
                 }
             }
         }
+    }
+
+    private boolean isTreeDrawerAvailable (String treeDrawerClassName) {
+        Listable[] stuff = MesquiteTrunk.mesquiteModulesInfoVector.getModulesOfDuty(DrawTree.class, null, null);
+        for (int i=0;i<stuff.length; i++) {
+            String thisTD = ((MesquiteModuleInfo) stuff[i]).getClassName();
+            if (thisTD.equalsIgnoreCase(treeDrawerClassName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -62,7 +62,12 @@ public class NexmlMesquiteManager {
 			mesquite.lib.MesquiteMessage.notifyProgrammer(s);
 	}
 
-	/**
+    public static void notify(String s) {
+            mesquite.lib.MesquiteMessage.notifyProgrammer(s);
+    }
+
+
+    /**
 	 *
 	 * @param annotation
 	 * @return
