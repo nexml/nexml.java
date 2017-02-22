@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URL;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
@@ -103,14 +104,10 @@ public class TestAnnotationTypes {
 	
 	@Test
 	public void parseMetaTypes() {
-		String nexmlRoot = System.getenv("NEXML_ROOT");
-		if ( nexmlRoot == null ) {
-			nexmlRoot = "/Users/rvosa/Dropbox/documents/projects/current/nexml/src/nexml/trunk/nexml";
-		}
-		File file = new File(nexmlRoot+"/examples/meta_types.xml");
 		Document doc = null;
 		try {
-			doc = DocumentFactory.parse(file);
+			URL nexmlURL = new URL("https://raw.githubusercontent.com/nexml/nexml/master" + "/examples/meta_types.xml");
+			doc = DocumentFactory.parse(nexmlURL.openStream());
 		} catch (SAXException e) {
 			Assert.assertTrue(e.getMessage(), false);
 			e.printStackTrace();
