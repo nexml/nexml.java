@@ -5,6 +5,7 @@ package org.nexml.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -22,12 +23,12 @@ public class TestFileParse {
 	public void parseCharacters() {
 		String nexmlRoot = System.getenv("NEXML_ROOT");
 		if ( nexmlRoot == null ) {
-			nexmlRoot = "/Users/rvosa/Dropbox/documents/projects/current/nexml/src/nexml/trunk/nexml";
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
 		}
-		File file = new File(nexmlRoot+"/examples/characters.xml");
 		Document doc = null;
 		try {
-			doc = DocumentFactory.parse(file);
+			URL nexmlURL = new URL(nexmlRoot + "/examples/characters.xml");
+			doc = DocumentFactory.parse(nexmlURL.openStream());
 		} catch (SAXException e) {
 			Assert.assertTrue(e.getMessage(), false);
 			e.printStackTrace();
