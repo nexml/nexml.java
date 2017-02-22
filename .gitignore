@@ -6,3 +6,4 @@ bin
 *.idea/*
 nexml.iml
 */target/*
+!/mesquite_module/jars/osbcp-css-parser-1.4.jar
