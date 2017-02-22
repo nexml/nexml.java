@@ -145,6 +145,9 @@ public class NexmlCharactersBlockReader extends NexmlBlockReader {
 				mesCharacter++;
 			}
 		}
+		for (String subset : xmlMatrix.getSubsetNames()) {
+			
+		}
 		mesMatrix.setUniqueID(xmlMatrix.getId());
 		mesMatrix.setName(xmlMatrix.getLabel());		
 		return mesMatrix;
