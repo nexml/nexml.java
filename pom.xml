@@ -1,40 +1,52 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.nexml</groupId>
-  <artifactId>nexml</artifactId>
-  <version>1.5</version>  
-  <packaging>jar</packaging>
-  <name>NeXML I/O library</name>
-  <description>Lightweight library for reading and writing NeXML documents</description>
-  <url>http://www.nexml.org</url>
-  <licenses>
-    <license>
-      <name>The Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-    </license>
-  </licenses>
-  <developers>
-    <developer>
-      <name>Rutger Vos</name>
-      <email>rutgeraldo@gmail.com</email>
-      <organization>Naturalis Biodiversity Center</organization>
-      <organizationUrl>http://www.naturalis.nl</organizationUrl>
-    </developer>
-  </developers>
-  <scm>
-    <connection>scm:git:git@github.com:nexml/nexml.java.git</connection>
-    <developerConnection>scm:git:git@github.com:nexml/nexml.java.git</developerConnection>
-    <url>git@github.com:nexml/nexml.java.git</url>
-  </scm>
-  <!--dependencies>
-    <dependency>
-      <groupId>...</groupId>
-      <artifactId>...</artifactId>
-      <version>...</version>
-    </dependency>
-    ...
-  </dependencies-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.nexml</groupId>
+    <artifactId>nexml</artifactId>
+    <version>1.6-SNAPSHOT</version>
+    <name>NeXML.java</name>
+    <description>Library and Mesquite module for NeXML I/O</description>
+    <url>http://www.nexml.org</url>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Rutger Vos</name>
+            <email>rutgeraldo@gmail.com</email>
+            <organization>Naturalis Biodiversity Center</organization>
+            <organizationUrl>http://www.naturalis.nl</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:nexml/nexml.java.git</connection>
+        <developerConnection>scm:git:git@github.com:nexml/nexml.java.git</developerConnection>
+        <url>git@github.com:nexml/nexml.java.git</url>
+    </scm>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>mesquite_module</module>
+        <module>model</module>
+        <module>transformer</module>
+        <module>validator</module>
+    </modules>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

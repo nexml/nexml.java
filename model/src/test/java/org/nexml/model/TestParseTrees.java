@@ -1,6 +1,7 @@
 package org.nexml.model;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,9 +19,10 @@ public class TestParseTrees {
 	public void parseFloatTree() throws Throwable {
 		String nexmlRoot = System.getenv("NEXML_ROOT");
 		if ( nexmlRoot == null ) {
-			nexmlRoot = "/Users/rvosa/Dropbox/documents/projects/current/nexml/src/nexml/trunk/nexml";
-		}		
-		Document document = DocumentFactory.parse(new File(nexmlRoot+"/examples/trees.xml"));
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
+		}
+		URL nexmlURL = new URL(nexmlRoot + "/examples/trees.xml");
+		Document document = DocumentFactory.parse(nexmlURL.openStream());
 		//System.out.println(document.getXmlString());
 		TreeBlock treeBlock = document.getTreeBlockList().get(0);
 		Assert.assertNotNull("we should have a tree block", treeBlock);
@@ -49,10 +51,10 @@ public class TestParseTrees {
 	public void parseIntTree() throws Throwable {
 		String nexmlRoot = System.getenv("NEXML_ROOT");
 		if ( nexmlRoot == null ) {
-			nexmlRoot = "/Users/rvosa/Dropbox/documents/projects/current/nexml/src/nexml/trunk/nexml";
-		}	
-		Document document = DocumentFactory.parse(new File(nexmlRoot+
-						"/examples/02_dogfish_no_taxrefs.xml"));
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
+		}
+		URL nexmlURL = new URL(nexmlRoot + "/examples/02_dogfish_no_taxrefs.xml");
+		Document document = DocumentFactory.parse(nexmlURL.openStream());
 		Assert.assertEquals("should be one tree", 1, document
 				.getTreeBlockList().size());
 		Assert.assertEquals("should be an int tree", "'the tree'", document
