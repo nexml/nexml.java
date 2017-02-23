@@ -104,9 +104,13 @@ public class TestAnnotationTypes {
 	
 	@Test
 	public void parseMetaTypes() {
+		String nexmlRoot = System.getenv("NEXML_ROOT");
+		if ( nexmlRoot == null ) {
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
+		}
 		Document doc = null;
 		try {
-			URL nexmlURL = new URL("https://raw.githubusercontent.com/nexml/nexml/master" + "/examples/meta_types.xml");
+			URL nexmlURL = new URL(nexmlRoot + "/examples/meta_types.xml");
 			doc = DocumentFactory.parse(nexmlURL.openStream());
 		} catch (SAXException e) {
 			Assert.assertTrue(e.getMessage(), false);

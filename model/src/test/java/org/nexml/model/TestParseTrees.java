@@ -17,7 +17,11 @@ public class TestParseTrees {
 
 	@Test
 	public void parseFloatTree() throws Throwable {
-		URL nexmlURL = new URL("https://raw.githubusercontent.com/nexml/nexml/master" + "/examples/trees.xml");
+		String nexmlRoot = System.getenv("NEXML_ROOT");
+		if ( nexmlRoot == null ) {
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
+		}
+		URL nexmlURL = new URL(nexmlRoot + "/examples/trees.xml");
 		Document document = DocumentFactory.parse(nexmlURL.openStream());
 		//System.out.println(document.getXmlString());
 		TreeBlock treeBlock = document.getTreeBlockList().get(0);
@@ -45,7 +49,11 @@ public class TestParseTrees {
 
 	@Test
 	public void parseIntTree() throws Throwable {
-		URL nexmlURL = new URL("https://raw.githubusercontent.com/nexml/nexml/master" + "/examples/02_dogfish_no_taxrefs.xml");
+		String nexmlRoot = System.getenv("NEXML_ROOT");
+		if ( nexmlRoot == null ) {
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
+		}
+		URL nexmlURL = new URL(nexmlRoot + "/examples/02_dogfish_no_taxrefs.xml");
 		Document document = DocumentFactory.parse(nexmlURL.openStream());
 		Assert.assertEquals("should be one tree", 1, document
 				.getTreeBlockList().size());
