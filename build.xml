@@ -2,10 +2,14 @@
 
 <project name="NeXML Java API" default="jar" basedir=".">
 	<description>NeXML Java API ant build</description>
+	<property name="mesquite" value="mesquite_module"/>
+	<property name="model" value="model"/>
+	<property name="validator" value="validator"/>
 	<property name="src" value="src"/>
 	<property name="test" value="test"/>
 	<property name="resources" value="resources"/>
 	<property name="classfiles" value="bin"/>
+	<property name="classfiles-mesquite" value="bin"/>
 	<property name="lib" value="jars"/>
 	<property name="revstring" value="$Rev$"/>
 	<property name="jarfile" value="nexml.jar"/>
@@ -16,18 +20,17 @@
 	<property name="saxonjar" value="saxon9he.jar"/>
 	<property name="saxonfolder" value="saxon"/>
 	<property name="mesquitezip" value="mesquite-nexml.zip"/>
-	<property name="mesquite-properties" value="mesquite/nexml/InterpretNEXML/predicateHandlerMapping.properties"/>
-	<property name="mesquite-ns-properties" value="mesquite/nexml/InterpretNEXML/namespaceHandlerMapping.properties"/>
+	<property name="mesquite-module" value="mesquite/nexml/InterpretNEXML"/>
+	<property name="mesquite-properties" value="predicateHandlerMapping.properties"/>
+	<property name="mesquite-ns-properties" value="namespaceHandlerMapping.properties"/>
 	<property name="default-tss" value="default.tss"/>
 	<property environment="env"/>
 
 	<!-- CORE LIBRARY -->
 	<target name="compile" depends="clean">
 		<mkdir dir="${classfiles}"/>
-	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
-	        <exclude name="**/mesquite/nexml/InterpretNEXML/**"/>
-	    	<exclude name="**/validator/**"/>
-	    	<exclude name="**/transformer/**"/>
+	    <javac srcdir="${model}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
+			<exclude name="**/${test}/**"/>
 	    </javac>
 	</target>
 
@@ -47,9 +50,7 @@
 
 	<target name="build-validator" depends="clean">
 		<mkdir dir="${classfiles}"/>
-	    <javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source">
-	        <exclude name="**/mesquite/nexml/InterpretNEXML/**"/>
-	    	<exclude name="**/org/nexml/model/**"/>
+	    <javac srcdir="${validator}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source">
 	    	<classpath refid="classpath-validator"/>
 	    </javac>
 	</target>
@@ -76,11 +77,10 @@
 
 	<target name="build-mesquite" depends="clean">
 		<mkdir dir="${classfiles}"/>
-        <unzip src="${lib}/${osbcpcssjar}" dest="${classfiles}"/>
-        <echo message="Using MESQUITE_ROOT=${toString:classpath-mesquite}"/>
-		<javac srcdir="${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.5" source="1.5" includeantruntime="false">
-			<exclude name="**/validator/*"/>
-			<exclude name="**/transformer/*"/>
+		<antcall target="compile"/>
+        <unzip src="${basedir}/${mesquite}/jars/${osbcpcssjar}" dest="${classfiles}"/>
+        <echo message="Using MESQUITE_ROOT=${env.MESQUITE_ROOT}"/>
+		<javac srcdir="${mesquite}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
 			<classpath refid="classpath-mesquite"/>
 		</javac>
 	</target>
@@ -91,13 +91,20 @@
 		</zip>
 	</target>
 
-	<target name="mesquite-install" depends="build-mesquite">
-		<copy todir="${toString:classpath-mesquite}">
-			<fileset dir="${classfiles}"/>
+	<target name="mesquite-copy">
+		<copy todir="${env.MESQUITE_ROOT}/org/nexml/model/">
+			<fileset dir="${classfiles}/org/nexml/model/"/>
 		</copy>
-		<copy tofile="${toString:classpath-mesquite}/${mesquite-properties}" file="${src}/${mesquite-properties}"/>
-		<copy tofile="${toString:classpath-mesquite}/${mesquite-ns-properties}" file="${src}/${mesquite-ns-properties}"/>
-		<copy tofile="${toString:classpath-mesquite}/${default-tss}" file="${resources}/${default-tss}"/>
+		<copy todir="${env.MESQUITE_ROOT}/mesquite/">
+			<fileset dir="${classfiles-mesquite}/mesquite/"/>
+		</copy>
+		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-module}/${mesquite-properties}" file="${mesquite}/${resources}/${mesquite-properties}"/>
+		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-module}/${mesquite-ns-properties}" file="${mesquite}/${resources}/${mesquite-ns-properties}"/>
+		<copy tofile="${env.MESQUITE_ROOT}/${default-tss}" file="${mesquite}/${resources}/${default-tss}"/>
+	</target>
+
+	<target name="mesquite-install" depends="build-mesquite">
+		<antcall target="mesquite-copy"/>
 	</target>
 
 	<!-- JUNIT TESTS -->
@@ -108,23 +115,26 @@
 	</path>
 
 	<target name="build-test" depends="compile">
-	    <javac srcdir="${test}" destdir="${classfiles}" debug="true" debuglevel="lines,source">
-	        <classpath refid="classpath-junit"/>
-	    </javac>
+		<javac srcdir="${model}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
+			<!--<exclude name="**/${test}/**"/>-->
+			<classpath refid="classpath-junit"/>
+		</javac>
 	</target>
 
 	<target name="test" depends="build-test" description="Unit tests">
-	        <junit fork="yes" printsummary="on" maxmemory="1024m">
+	        <junit fork="yes" printsummary="on" maxmemory="1024m" haltonerror="true" showoutput="true">
 	            <classpath>
 	                <pathelement path="."/>
 	                <pathelement path="${classfiles}"/>
 	                <fileset dir="${lib}">
 	                    <include name="junit-4.5.jar"/>
+						<include name="${classfiles}"/>
 	                </fileset>
 	            </classpath>
 	            <batchtest>
-	                <fileset dir="${test}"/>
+	                <fileset dir="${model}/${src}/${test}/java/"/>
 	            </batchtest>
+				<formatter type="plain" usefile="false" /> <!-- to screen -->
 	        </junit>
 	</target>
 
