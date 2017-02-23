@@ -5,6 +5,7 @@ package org.nexml.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -22,12 +23,12 @@ public class TestFileParse {
 	public void parseCharacters() {
 		String nexmlRoot = System.getenv("NEXML_ROOT");
 		if ( nexmlRoot == null ) {
-			nexmlRoot = "/Users/rvosa/Dropbox/documents/projects/current/nexml/src/nexml/trunk/nexml";
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml/master";
 		}
-		File file = new File(nexmlRoot+"/examples/characters.xml");
 		Document doc = null;
 		try {
-			doc = DocumentFactory.parse(file);
+			URL nexmlURL = new URL(nexmlRoot + "/examples/characters.xml");
+			doc = DocumentFactory.parse(nexmlURL.openStream());
 		} catch (SAXException e) {
 			Assert.assertTrue(e.getMessage(), false);
 			e.printStackTrace();
@@ -43,15 +44,25 @@ public class TestFileParse {
 	
 	@Test
 	public void parsePhenoscapeMatrix() throws SAXException, IOException, ParserConfigurationException {
-		final File file = new File("test_files/Buckup_1998.xml");
-		final Document doc = DocumentFactory.parse(file);
-		for (Matrix<?> matrix : doc.getMatrices()) {
-			for (Character character : matrix.getCharacters()) {
-				for (OTU otu : matrix.getOTUs()) {
-					System.out.println(matrix.getRowObject(otu).getCell(character).getValue());
+		String nexmlRoot = System.getenv("NEXML_ROOT");
+		if ( nexmlRoot == null ) {
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml.java/7cd4988e39ce5a31d477a65c6f52a866b4ced2ee";
+		}
+		try {
+			URL nexmlURL = new URL(nexmlRoot + "/test_files/Buckup_1998.xml");
+			Document doc = DocumentFactory.parse(nexmlURL.openStream());
+			for (Matrix<?> matrix : doc.getMatrices()) {
+				for (Character character : matrix.getCharacters()) {
+					for (OTU otu : matrix.getOTUs()) {
+						System.out.println(matrix.getRowObject(otu).getCell(character).getValue());
+					}
 				}
 			}
+		} catch (Exception e) {
+			Assert.assertTrue(e.getMessage(), false);
+			e.printStackTrace();
 		}
 	}
+
 
 }
