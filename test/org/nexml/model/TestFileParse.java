@@ -44,15 +44,25 @@ public class TestFileParse {
 	
 	@Test
 	public void parsePhenoscapeMatrix() throws SAXException, IOException, ParserConfigurationException {
-		final File file = new File("test_files/Buckup_1998.xml");
-		final Document doc = DocumentFactory.parse(file);
-		for (Matrix<?> matrix : doc.getMatrices()) {
-			for (Character character : matrix.getCharacters()) {
-				for (OTU otu : matrix.getOTUs()) {
-					System.out.println(matrix.getRowObject(otu).getCell(character).getValue());
+		String nexmlRoot = System.getenv("NEXML_ROOT");
+		if ( nexmlRoot == null ) {
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml.java/master";
+		}
+		try {
+			URL nexmlURL = new URL(nexmlRoot + "/test_files/Buckup_1998.xml");
+			Document doc = DocumentFactory.parse(nexmlURL.openStream());
+			for (Matrix<?> matrix : doc.getMatrices()) {
+				for (Character character : matrix.getCharacters()) {
+					for (OTU otu : matrix.getOTUs()) {
+						System.out.println(matrix.getRowObject(otu).getCell(character).getValue());
+					}
 				}
 			}
+		} catch (Exception e) {
+			Assert.assertTrue(e.getMessage(), false);
+			e.printStackTrace();
 		}
 	}
+
 
 }
