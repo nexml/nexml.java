@@ -46,7 +46,7 @@ public class TestFileParse {
 	public void parsePhenoscapeMatrix() throws SAXException, IOException, ParserConfigurationException {
 		String nexmlRoot = System.getenv("NEXML_ROOT");
 		if ( nexmlRoot == null ) {
-			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml.java/master";
+			nexmlRoot = "https://raw.githubusercontent.com/nexml/nexml.java/7cd4988e39ce5a31d477a65c6f52a866b4ced2ee";
 		}
 		try {
 			URL nexmlURL = new URL(nexmlRoot + "/test_files/Buckup_1998.xml");
