@@ -3,9 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.nexml</groupId>
     <artifactId>mesquite_module</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6</version>
     <packaging>jar</packaging>
     <name>Mesquite Module</name>
     <description>Module to allow the Mesquite package to read and write NeXML documents</description>
@@ -13,7 +12,7 @@
     <parent>
         <groupId>org.nexml</groupId>
         <artifactId>nexml</artifactId>
-        <version>1.6-SNAPSHOT</version>
+        <version>1.6</version>
     </parent>
     <build>
         <resources>
@@ -67,7 +66,7 @@
         <dependency>
             <groupId>org.nexml</groupId>
             <artifactId>model</artifactId>
-            <version>1.6-SNAPSHOT</version>
+            <version>1.6</version>
         </dependency>
     </dependencies>
 </project>
