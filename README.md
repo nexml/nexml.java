@@ -1,32 +1,35 @@
 Java NeXML libraries and tools
 ==============================
 
-This project contains java code for NeXML processing. The src/ folder contains source code 
-for the following subprojects:
+This repository contains java code for NeXML processing. The repository is organized
+in the following subfolders:
 
-* `src/org/` contains the DOM-based core java 5 NeXML reading/writing API. The API 
-consists of interfaces in the `org.nexml.model` package and implementations thereof in 
-the `org.nexml.model.impl` package.
+* [model](model) contains the DOM-based core java 5 NeXML reading/writing API, inside 
+`src/main/java` as well as JUnit tests inside `src/tets/java`. The API consists of 
+interfaces in the `org.nexml.model` package and implementations thereof in the 
+`org.nexml.model.impl` package.
 
-* `src/mesquite/` contains classes for [mesquite](http://mesquiteproject.org). These 
-classes depend on the `org.nexml.model.*` architecture.
+* [mesquite_module](mesquite_module) contains NeXML import/export functionality for 
+[mesquite](http://mesquiteproject.org). This subfolder structure contains classess 
+(inside `src/main/java`) that classes depend on the `org.nexml.model.*` architecture.
+In addition there are resource files: properties files that map between certain annotation
+namespaces and/or predicates as encountered in NeXML files, and the Java handler classes
+that are to be dynamically loaded to operate on them; and a default Tree Style Sheet (TSS)
+file for marking up tree visualizations.
 
-* `src/validator/` contains a [Xerces-J](http://xerces.apache.org/xerces-j/)-based
+* [validator](validatory) contains a [Xerces-J](http://xerces.apache.org/xerces-j/)-based
 XML validator (written by Terri Liebowitz of the San Diego Supercomputing Center, with 
 modifications by Mark Holder) and a ValidateNeXML class that does essentially the same 
 thing, but more tailored to NeXML specifically.
 
-* `src/transformer/` contains a class that transforms NeXML documents into CDAO documents 
-using the xslt stylesheets found in $NEXML_ROOT/xslt.
+* [transformer](transformer) contains a class that transforms NeXML documents into 
+[CDAO](https://bioportal.bioontology.org/ontologies/CDAO) documents using the xslt 
+stylesheets found in $NEXML_ROOT/xslt.
 
-* `test/` contains [JUnit4](http://www.junit.org/) tests for the `org.nexml.model` API. 
-Some of the tests attempt to parse files from the $NEXML_ROOT/examples folder.
+* [jars](jars) contains dependencies for the code in the `model` folders and folders that
+depend on this (i.e. `mesquite_module`).
 
-* `jars/` contains dependencies for the code in the src/ and test/ folders. As of 1 Sept 
-2010, all seemingly extraneous jars have been removed, leaving only the JUnit jar (for 
-testing), the Xerces jar (for the validator), and the saxon jar (for the transformer).
-
-* `resources/` contains an example classpaths.xml file for mesquite's 
+* [resources](resources) contains an example `classpaths.xml` file for mesquite's 
 [system for loading other projects](http://mesquiteproject.org/mesquite/download/source.html#classPaths).
 		
 * `build.sh` is a simple shell script that invokes ant, using the `build.xml` to build and 
