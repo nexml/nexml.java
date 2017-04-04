@@ -11,13 +11,13 @@ interfaces in the `org.nexml.model` package and implementations thereof in the
 
 * [mesquite_module](mesquite_module) contains NeXML import/export functionality for 
 [mesquite](http://mesquiteproject.org). This subfolder structure contains classess 
-(inside `src/main/java`) that classes depend on the `org.nexml.model.*` architecture.
+(inside `src/main/java`) that depend on the `org.nexml.model.*` architecture.
 In addition there are resource files: properties files that map between certain annotation
 namespaces and/or predicates as encountered in NeXML files, and the Java handler classes
 that are to be dynamically loaded to operate on them; and a default Tree Style Sheet (TSS)
 file for marking up tree visualizations.
 
-* [validator](validatory) contains a [Xerces-J](http://xerces.apache.org/xerces-j/)-based
+* [validator](validator) contains a [Xerces-J](http://xerces.apache.org/xerces-j/)-based
 XML validator (written by Terri Liebowitz of the San Diego Supercomputing Center, with 
 modifications by Mark Holder) and a ValidateNeXML class that does essentially the same 
 thing, but more tailored to NeXML specifically.
