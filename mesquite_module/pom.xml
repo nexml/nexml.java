@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>mesquite_module</artifactId>
+    <version>1.6</version>
+    <packaging>jar</packaging>
+    <name>Mesquite Module</name>
+    <description>Module to allow the Mesquite package to read and write NeXML documents</description>
+    <url>http://www.nexml.org</url>
+    <parent>
+        <groupId>org.nexml</groupId>
+        <artifactId>nexml</artifactId>
+        <version>1.6</version>
+    </parent>
+    <build>
+        <resources>
+            <resource>
+                <directory>resources</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <target>
+                                <property name="classfiles" value="${basedir}/../model/target/classes"/>
+                                <property name="classfiles-mesquite" value="${basedir}/../mesquite_module/target/classes"/>
+                                <property name="mesquite" value="${basedir}"/>
+                                <ant antfile="${basedir}/../build.xml">
+                                    <target name="mesquite-copy"/>
+                                </ant>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>MesquiteCore</groupId>
+            <artifactId>MesquiteCore</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.osbcp.cssparser</groupId>
+            <artifactId>com.osbcp.cssparser</artifactId>
+            <version>1.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jars/osbcp-css-parser-1.4.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.nexml</groupId>
+            <artifactId>model</artifactId>
+            <version>1.6</version>
+        </dependency>
+    </dependencies>
+</project>

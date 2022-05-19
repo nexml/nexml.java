@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+
+<project name="NeXML Java API" default="jar" basedir=".">
+	<description>NeXML Java API ant build</description>
+	<property name="mesquite" value="mesquite_module"/>
+	<property name="model" value="model"/>
+	<property name="validator" value="validator"/>
+	<property name="src" value="src"/>
+	<property name="test" value="test"/>
+	<property name="resources" value="resources"/>
+	<property name="classfiles" value="bin"/>
+	<property name="classfiles-mesquite" value="bin"/>
+	<property name="lib" value="jars"/>
+	<property name="revstring" value="$Rev$"/>
+	<property name="jarfile" value="nexml.jar"/>
+	<property name="validatorjar" value="validator.jar"/>
+	<property name="xercesjar" value="xercesImpl.jar"/>
+	<property name="xercesfolder" value="xerces"/>
+	<property name="osbcpcssjar" value="osbcp-css-parser-1.4.jar"/>
+	<property name="saxonjar" value="saxon9he.jar"/>
+	<property name="saxonfolder" value="saxon"/>
+	<property name="mesquitezip" value="mesquite-nexml.zip"/>
+	<property name="mesquite-module" value="mesquite/nexml/InterpretNEXML"/>
+	<property name="mesquite-properties" value="predicateHandlerMapping.properties"/>
+	<property name="mesquite-ns-properties" value="namespaceHandlerMapping.properties"/>
+	<property name="default-tss" value="default.tss"/>
+	<property environment="env"/>
+
+	<!-- CORE LIBRARY -->
+	<target name="compile" depends="clean">
+		<mkdir dir="${classfiles}"/>
+	    <javac srcdir="${model}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
+			<exclude name="**/${test}/**"/>
+	    </javac>
+	</target>
+
+    <target name="jar" depends="compile">
+        <jar destfile="${jarfile}">
+            <fileset dir="${classfiles}"/>
+        </jar>
+    </target>
+
+	<!-- VALIDATOR -->
+    <path id="classpath-validator">
+        <fileset dir="${lib}">
+            <include name="${xercesjar}"/>
+            <include name="${saxonjar}"/>
+        </fileset>
+    </path>
+
+	<target name="build-validator" depends="clean">
+		<mkdir dir="${classfiles}"/>
+	    <javac srcdir="${validator}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source">
+	    	<classpath refid="classpath-validator"/>
+	    </javac>
+	</target>
+
+    <target name="validator" depends="build-validator">
+    	<mkdir dir="${xercesfolder}"/>
+    	<unzip src="${lib}/${xercesjar}" dest="${xercesfolder}"/>
+    	<unzip src="${lib}/${saxonjar}" dest="${saxonfolder}"/>
+        <jar destfile="${validatorjar}">
+            <fileset dir="${classfiles}"/>
+            <fileset dir="${xercesfolder}"/>
+        	<fileset dir="${saxonfolder}" excludes="META-INF/SAXONICA.*" />
+        	<manifest>
+        		<attribute name="Main-Class" value="validator.ValidateNeXML"/>
+        	</manifest>
+        </jar>
+    </target>
+
+
+	<!-- MESQUITE -->
+	<path id="classpath-mesquite">
+		<pathelement path="${env.MESQUITE_ROOT}"/>
+    </path>
+
+	<target name="build-mesquite" depends="clean">
+		<mkdir dir="${classfiles}"/>
+		<antcall target="compile"/>
+        <unzip src="${basedir}/${mesquite}/jars/${osbcpcssjar}" dest="${classfiles}"/>
+        <echo message="Using MESQUITE_ROOT=${env.MESQUITE_ROOT}"/>
+		<javac srcdir="${mesquite}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
+			<classpath refid="classpath-mesquite"/>
+		</javac>
+	</target>
+
+	<target name="mesquite" depends="build-mesquite">
+		<zip destfile="${mesquitezip}">
+			<fileset dir="${classfiles}"/>
+		</zip>
+	</target>
+
+	<target name="mesquite-copy">
+		<copy todir="${env.MESQUITE_ROOT}/org/nexml/model/">
+			<fileset dir="${classfiles}/org/nexml/model/"/>
+		</copy>
+		<copy todir="${env.MESQUITE_ROOT}/mesquite/">
+			<fileset dir="${classfiles-mesquite}/mesquite/"/>
+		</copy>
+		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-module}/${mesquite-properties}" file="${mesquite}/${resources}/${mesquite-properties}"/>
+		<copy tofile="${env.MESQUITE_ROOT}/${mesquite-module}/${mesquite-ns-properties}" file="${mesquite}/${resources}/${mesquite-ns-properties}"/>
+		<copy tofile="${env.MESQUITE_ROOT}/${default-tss}" file="${mesquite}/${resources}/${default-tss}"/>
+	</target>
+
+	<target name="mesquite-install" depends="build-mesquite">
+		<antcall target="mesquite-copy"/>
+	</target>
+
+	<!-- JUNIT TESTS -->
+	<path id="classpath-junit">
+        <fileset dir="${lib}">
+            <include name="junit-4.5.jar"/>
+        </fileset>
+	</path>
+
+	<target name="build-test" depends="compile">
+		<javac srcdir="${model}/${src}" destdir="${classfiles}" debug="true" debuglevel="lines,source" target="1.6" source="1.6" includeantruntime="false">
+			<!--<exclude name="**/${test}/**"/>-->
+			<classpath refid="classpath-junit"/>
+		</javac>
+	</target>
+
+	<target name="test" depends="build-test" description="Unit tests">
+	        <junit fork="yes" printsummary="on" maxmemory="1024m" haltonerror="true" showoutput="true">
+	            <classpath>
+	                <pathelement path="."/>
+	                <pathelement path="${classfiles}"/>
+	                <fileset dir="${lib}">
+	                    <include name="junit-4.5.jar"/>
+						<include name="${classfiles}"/>
+	                </fileset>
+	            </classpath>
+	            <batchtest>
+	                <fileset dir="${model}/${src}/${test}/java/"/>
+	            </batchtest>
+				<formatter type="plain" usefile="false" /> <!-- to screen -->
+	        </junit>
+	</target>
+
+	<!-- CLEANUP -->
+    <target name="clean">
+        <delete dir="${classfiles}"/>
+    	<delete dir="${xercesfolder}"/>
+    	<delete dir="${saxonfolder}"/>
+        <delete file="${jarfile}"/>
+    	<delete file="${mesquitezip}"/>
+    	<delete file="${validatorjar}"/>
+    </target>
+
+</project>
