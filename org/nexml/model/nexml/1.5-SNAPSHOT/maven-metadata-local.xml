@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.nexml.model</groupId>
+  <artifactId>nexml</artifactId>
+  <versioning>
+    <lastUpdated>20220519195957</lastUpdated>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>jar</extension>
+        <value>1.5-SNAPSHOT</value>
+        <updated>20220519195957</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>1.5-SNAPSHOT</value>
+        <updated>20220519195957</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+  <version>1.5-SNAPSHOT</version>
+</metadata>
