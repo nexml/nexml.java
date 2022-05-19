@@ -74,16 +74,16 @@ the maven repository on the nexml web server, i.e. in your pom.xml do something 
 		<repository>
 			<id>m2.nexml.repos</id>
 			<name>NeXML Remote Repository</name>
-			<url>http://nexml.github.io/maven/repository</url>
+			<url>[http://nexml.github.io/maven/repository](https://nexml.github.io/nexml.java/maven_repo)</url>
 		</repository>		
 		
 		<!-- .... and further down.... --->
 		
-        <dependency>
-            <groupId>org.nexml</groupId>
-            <artifactId>model</artifactId>
-            <version>1.6</version>
-        </dependency>	
+		<dependency>
+			<groupId>org.nexml.model</groupId>
+			<artifactId>nexml</artifactId>
+			<version>1.5-SNAPSHOT</version>
+		</dependency>
         
 * `test` - this target runs JUnit tests on the core nexml library.  To run these, the
 NEXML_ROOT environment variable needs to point at the folder which contains the examples 
