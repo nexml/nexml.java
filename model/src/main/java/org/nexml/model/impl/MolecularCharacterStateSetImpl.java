@@ -156,7 +156,7 @@ class MolecularCharacterStateSetImpl extends CharacterStateSetImpl{
         hSet.add(aState);
         hSet.add(cState);
         hSet.add(tState);
-        getCharacterStates().add(createUncertainCharacterState("H",dSet));
+        getCharacterStates().add(createUncertainCharacterState("H",hSet));
 
         // V => (A,C,G)
         Set<CharacterState> vSet = new HashSet<CharacterState>(3);
@@ -287,7 +287,7 @@ class MolecularCharacterStateSetImpl extends CharacterStateSetImpl{
         hSet.add(aState);
         hSet.add(cState);
         hSet.add(uState);
-        getCharacterStates().add(createUncertainCharacterState("H",dSet));
+        getCharacterStates().add(createUncertainCharacterState("H",hSet));
         
         // V => (A,C,G)
         Set<CharacterState> vSet = new HashSet<CharacterState>(3);
